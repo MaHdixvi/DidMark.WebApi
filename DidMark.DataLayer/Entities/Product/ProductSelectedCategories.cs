@@ -15,8 +15,8 @@ namespace DidMark.DataLayer.Entities.Product
         #endregion 
 
         #region Relations
-        public Product Product { get; set; }
-        public ProductCategories ProductCategories { get; set; }
+        public virtual Product Product { get; set; }
+        public virtual ProductCategories ProductCategories { get; set; }
         #endregion
     }
 }

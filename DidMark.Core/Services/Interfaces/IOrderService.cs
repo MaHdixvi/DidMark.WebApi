@@ -2,26 +2,22 @@
 using DidMark.DataLayer.Entities.Orders;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DidMark.Core.Services.Interfaces
 {
     public interface IOrderService : IDisposable
     {
-        #region order
-        Task<Order> CreateOrderUser(long userId);
-        Task<Order> GetUserOpenOrder(long userId);
-        #endregion
-        #region order detail
-        Task AddProductToOrder(long userId, long productId, int count);
-        Task<List<OrderDetail>> GetOrderDetails(long orderId);
-        Task<List<OrderBasketDetail>> GetUserBasketDetails(long userId);
-        Task DeleteOrderDetails(OrderDetail detail);
+        #region Order
+        Task<Order> CreateOrderUserAsync(long userId);
+        Task<Order> GetUserOpenOrderAsync(long userId);
         #endregion
 
-
-
+        #region Order Detail
+        Task AddProductToOrderAsync(long userId, long productId, int count);
+        Task<List<OrderDetail>> GetOrderDetailsAsync(long orderId);
+        Task<List<OrderBasketDetail>> GetUserBasketDetailsAsync(long userId);
+        Task DeleteOrderDetailsAsync(long detailId);
+        #endregion
     }
 }

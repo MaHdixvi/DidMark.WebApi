@@ -2,162 +2,185 @@
 using DidMark.Core.Security;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Convertors;
+using DidMark.Core.Utilities.Enums;
 using DidMark.DataLayer.Entities.Access;
 using DidMark.DataLayer.Entities.Account;
 using DidMark.DataLayer.Repository;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DidMark.Core.Services.Implementations
 {
     public class UserService : IUserService
     {
-        #region constructor
+        private readonly IGenericRepository<User> _userRepository;
+        private readonly IGenericRepository<UserRole> _userRoleRepository;
+        private readonly IPasswordHelper _passwordHelper;
+        private readonly IMailSender _mailSender;
+        private readonly IViewRenderService _viewRenderService;
+        private bool _disposed;
 
-        private IGenericRepository<User> userRepository;
-        private IPasswordHelper passwordHelper;
-        private IMailSender mailSender;
-        private IViewRenderService renderView;
-        private IGenericRepository<UserRole> userRoleRepository;
-
-        public UserService(IGenericRepository<User> userRepository, IPasswordHelper passwordHelper, IMailSender mailSender, IViewRenderService renderView, IGenericRepository<UserRole> userRoleRepository)
+        public UserService(
+            IGenericRepository<User> userRepository,
+            IGenericRepository<UserRole> userRoleRepository,
+            IPasswordHelper passwordHelper,
+            IMailSender mailSender,
+            IViewRenderService viewRenderService)
         {
-            this.userRepository = userRepository;
-            this.passwordHelper = passwordHelper;
-            this.mailSender = mailSender;
-            this.renderView = renderView;
-            this.userRoleRepository = userRoleRepository;
-
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _userRoleRepository = userRoleRepository ?? throw new ArgumentNullException(nameof(userRoleRepository));
+            _passwordHelper = passwordHelper ?? throw new ArgumentNullException(nameof(passwordHelper));
+            _mailSender = mailSender ?? throw new ArgumentNullException(nameof(mailSender));
+            _viewRenderService = viewRenderService ?? throw new ArgumentNullException(nameof(viewRenderService));
         }
 
-        #endregion
-
-        #region User Section
-
-        public async Task<List<User>> GetAllUsers()
+        public async Task<List<User>> GetAllUsersAsync()
         {
-            return await userRepository.GetEntitiesQuery().ToListAsync();
+            return await _userRepository.GetEntitiesQuery().ToListAsync();
         }
 
-        public async Task<RegisterUserResult> RegisterUser(RegisterUserDTO register)
+        public async Task<RegisterUserResult> RegisterUserAsync(RegisterUserDTO register)
         {
-            if (IsUserExistsByEmail(register.Email))
+            if (await ExistsByEmailAsync(register.Email))
                 return RegisterUserResult.EmailExists;
-            if (IsUserExistsByPhoneNumber(register.PhoneNumber))
+
+            if (await ExistsByPhoneNumberAsync(register.PhoneNumber))
                 return RegisterUserResult.PhoneNumberExists;
+
             var user = new User
             {
                 Email = register.Email.SanitizeText(),
                 FirstName = register.FirstName.SanitizeText(),
                 LastName = register.LastName.SanitizeText(),
                 EmailActiveCode = Guid.NewGuid().ToString(),
-                Password = passwordHelper.EncodePasswordMd5(register.Password),
+                Password = _passwordHelper.EncodePasswordMd5(register.Password),
                 NationalCode = register.NationalCode.SanitizeText(),
                 PhoneNumber = register.PhoneNumber.SanitizeText(),
                 PhoneActiveCode = Guid.NewGuid().ToString(),
+                Username = register.Username.SanitizeText(),
+                IsActivated = true
             };
 
-            await userRepository.AddEntity(user);
+            await _userRepository.AddEntity(user);
+            await _userRepository.SaveChanges();
 
-            await userRepository.SaveChanges();
-
-            var body = await renderView.RenderToStringAsync("Email/ActivateAccount", user);
-
-            mailSender.Send(user.Email, "test", body);
+            var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", user);
+            _mailSender.Send(user.Email, "Activate Your Account", body);
 
             return RegisterUserResult.Success;
         }
 
-        private bool IsUserExistsByPhoneNumber(string phoneNumber)
+        public async Task<bool> ExistsByEmailAsync(string email)
         {
-            return userRepository.GetEntitiesQuery().Any(s => s.PhoneNumber == phoneNumber.ToLower().Trim());
+            return await _userRepository.GetEntitiesQuery()
+                .AnyAsync(s => s.Email == email.ToLower().Trim());
         }
 
-        public bool IsUserExistsByEmail(string email)
+        public async Task<bool> ExistsByPhoneNumberAsync(string phoneNumber)
         {
-            return userRepository.GetEntitiesQuery().Any(s => s.Email == email.ToLower().Trim());
+            return await _userRepository.GetEntitiesQuery()
+                .AnyAsync(s => s.PhoneNumber == phoneNumber.ToLower().Trim());
         }
 
-        public async Task<LoginUserResult> LoginUser(LoginUserDTO login, bool checkAdminRole = false)
+        public async Task<LoginUserResult> LoginUserAsync(LoginUserDTO login, bool checkAdminRole = false)
         {
-            var password = passwordHelper.EncodePasswordMd5(login.Password);
-
-            var user = await userRepository.GetEntitiesQuery()
+            var password = _passwordHelper.EncodePasswordMd5(login.Password);
+            var user = await _userRepository.GetEntitiesQuery()
                 .SingleOrDefaultAsync(s => s.Email == login.Email.ToLower().Trim() && s.Password == password);
 
-            if (user == null) return LoginUserResult.IncorrectData;
+            if (user == null)
+                return LoginUserResult.IncorrectData;
 
-            if (!user.IsActivated) return LoginUserResult.NotActivated;
+            if (!user.IsActivated)
+                return LoginUserResult.NotActivated;
 
-            if (checkAdminRole)
-            {
-                var IsUserAdmin = await userRoleRepository.GetEntitiesQuery()
-                    .Include(s => s.Role)
-                    .AsQueryable().AnyAsync(s => s.UserId == user.Id && s.Role.RoleName == "Admin");
-
-                if (!IsUserAdmin)
-                {
-                    return LoginUserResult.NotAdmin;
-                }
-            }
+            if (checkAdminRole && !await IsAdminAsync(user.Id))
+                return LoginUserResult.NotAdmin;
 
             return LoginUserResult.Success;
         }
 
-        public async Task<User> GetUserByEmail(string email)
+        public async Task<User?> GetUserByEmailAsync(string email)
         {
-            return await userRepository.GetEntitiesQuery().SingleOrDefaultAsync(s => s.Email == email.ToLower().Trim());
-        }
-        public async Task<User> GetUserByUserId(long userId)
-        {
-            return await userRepository.GetEntityById(userId);
+            return await _userRepository.GetEntitiesQuery()
+                .SingleOrDefaultAsync(s => s.Email == email.ToLower().Trim());
         }
 
-        public void ActivateUser(User user)
+        public async Task<User?> GetUserByIdAsync(long userId)
         {
+            return await _userRepository.GetEntityById(userId);
+        }
+
+        public async Task<bool> ActivateUserAsync(User user)
+        {
+            if (user == null)
+                return false;
+
             user.IsActivated = true;
             user.EmailActiveCode = Guid.NewGuid().ToString();
-            userRepository.UpdateEntity(user);
-            userRepository.SaveChanges();
+            _userRepository.UpdateEntity(user);
+            await _userRepository.SaveChanges();
+            return true;
         }
 
-        public Task<User> GetUserByEmailActiveCode(string emailActiveCode)
+        public async Task<User?> GetUserByActivationCodeAsync(string activationCode)
         {
-            return userRepository.GetEntitiesQuery().SingleOrDefaultAsync(s => s.EmailActiveCode == emailActiveCode);
+            return await _userRepository.GetEntitiesQuery()
+                .SingleOrDefaultAsync(s => s.EmailActiveCode == activationCode);
         }
 
-        #endregion
-
-
-        public async Task EditUserInfo(EditUserDTO user, long userId)
+        public async Task<bool> UpdateUserAsync(EditUserDTO user, long userId)
         {
-            var mainuser = await userRepository.GetEntityById(userId);
-            if (mainuser != null)
-            {
-                mainuser.FirstName = user.FirstName;
-                mainuser.LastName = user.LastName;
-                mainuser.Address = user.Address;
-                userRepository.UpdateEntity(mainuser);
-                await userRepository.SaveChanges();
-            }
+            var existingUser = await _userRepository.GetEntityById(userId);
+            if (existingUser == null)
+                return false;
+
+            existingUser.FirstName = user.FirstName.SanitizeText();
+            existingUser.LastName = user.LastName.SanitizeText();
+            existingUser.Address = user.Address.SanitizeText();
+
+            _userRepository.UpdateEntity(existingUser);
+            await _userRepository.SaveChanges();
+            return true;
         }
 
-        public async Task<bool> IsUserAdmin(long userId)
+        public async Task<bool> IsAdminAsync(long userId)
         {
-            return await userRoleRepository.GetEntitiesQuery()
-                    .Include(s => s.Role)
-                    .AsQueryable().AnyAsync(s => s.UserId == userId && s.Role.RoleName == "Admin");
+            return await _userRoleRepository.GetEntitiesQuery()
+                .Include(s => s.Role)
+                .AnyAsync(s => s.UserId == userId && s.Role.RoleTitle == "Admin");
         }
-        #region dispose
+
+        public async Task<ChangePasswordResult> ChangePasswordAsync(ChangePasswordDTO changePassword, long userId)
+        {
+            var user = await _userRepository.GetEntityById(userId);
+            if (user == null)
+                return ChangePasswordResult.UserNotFound;
+
+            var currentPasswordHash = _passwordHelper.EncodePasswordMd5(changePassword.CurrentPassword);
+            if (user.Password != currentPasswordHash)
+                return ChangePasswordResult.IncorrectCurrentPassword;
+
+            var newPasswordHash = _passwordHelper.EncodePasswordMd5(changePassword.NewPassword);
+            if (user.Password == newPasswordHash)
+                return ChangePasswordResult.SameAsOldPassword;
+
+            user.Password = newPasswordHash;
+            _userRepository.UpdateEntity(user);
+            await _userRepository.SaveChanges();
+            return ChangePasswordResult.Success;
+        }
 
         public void Dispose()
         {
-            userRepository?.Dispose();
+            if (_disposed)
+                return;
+
+            _userRepository?.Dispose();
+            _userRoleRepository?.Dispose();
+            _disposed = true;
         }
-        #endregion
     }
 }

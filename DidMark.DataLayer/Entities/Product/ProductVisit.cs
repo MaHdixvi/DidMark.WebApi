@@ -19,7 +19,7 @@ namespace DidMark.DataLayer.Entities.Product
         public int UserIp { get; set; }
         #endregion
         #region relations 
-        public Product Product { get; set; }
+        public virtual Product Product { get; set; }
         #endregion
     }
 }

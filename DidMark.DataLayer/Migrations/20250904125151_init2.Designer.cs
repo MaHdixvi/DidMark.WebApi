@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DidMark.DataLayer.Migrations
 {
     [DbContext(typeof(MasterContext))]
-    [Migration("20231014133607_initial")]
-    partial class initial
+    [Migration("20250904125151_init2")]
+    partial class init2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -55,6 +55,26 @@ namespace DidMark.DataLayer.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            CreateDate = new DateTime(2025, 9, 4, 16, 21, 50, 737, DateTimeKind.Local).AddTicks(730),
+                            IsDelete = false,
+                            LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            RoleName = "Owner",
+                            RoleTitle = "Admin"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            CreateDate = new DateTime(2025, 9, 4, 16, 21, 50, 737, DateTimeKind.Local).AddTicks(753),
+                            IsDelete = false,
+                            LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            RoleName = "Owner",
+                            RoleTitle = "User"
+                        });
                 });
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Access.UserRole", b =>
@@ -87,6 +107,26 @@ namespace DidMark.DataLayer.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            CreateDate = new DateTime(2025, 9, 4, 16, 21, 50, 737, DateTimeKind.Local).AddTicks(1454),
+                            IsDelete = false,
+                            LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            RoleId = 1L,
+                            UserId = 1L
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            CreateDate = new DateTime(2025, 9, 4, 16, 21, 50, 737, DateTimeKind.Local).AddTicks(1458),
+                            IsDelete = false,
+                            LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            RoleId = 2L,
+                            UserId = 1L
+                        });
                 });
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Account.User", b =>
@@ -98,17 +138,10 @@ namespace DidMark.DataLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ConfirmPassword")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -171,7 +204,6 @@ namespace DidMark.DataLayer.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Province")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -183,6 +215,27 @@ namespace DidMark.DataLayer.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            CreateDate = new DateTime(2025, 9, 4, 16, 21, 50, 737, DateTimeKind.Local).AddTicks(1391),
+                            Email = "admin@didmark.com",
+                            EmailActiveCode = "02dc076b-463a-44e3-9d43-611d10f3042d",
+                            FirstName = "Admin",
+                            IsActivated = true,
+                            IsDelete = false,
+                            IsEmailActivated = false,
+                            IsPhoneActivated = false,
+                            LastName = "User",
+                            LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            NationalCode = "4271706248",
+                            Password = "46-CC-1A-A2-C2-86-07-50-4E-B8-CA-F1-62-CF-23-C4",
+                            PhoneActiveCode = "1234",
+                            PhoneNumber = "09100295341",
+                            Username = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.Order", b =>
@@ -206,7 +259,6 @@ namespace DidMark.DataLayer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("OffCode")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("PaymentDate")
@@ -269,7 +321,6 @@ namespace DidMark.DataLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<long>("Code")
-                        .HasMaxLength(100)
                         .HasColumnType("bigint");
 
                     b.Property<string>("Color")
@@ -302,14 +353,10 @@ namespace DidMark.DataLayer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("NumberofProduct")
-                        .HasMaxLength(100)
                         .HasColumnType("int");
 
                     b.Property<int>("Price")
                         .HasColumnType("int");
-
-                    b.Property<long>("ProductId")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
@@ -327,7 +374,7 @@ namespace DidMark.DataLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Product");
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Product.ProductCategories", b =>

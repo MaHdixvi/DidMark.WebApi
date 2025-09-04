@@ -14,11 +14,11 @@ namespace DidMark.DataLayer.Entities.Orders
         public long UserId { get; set; }
         public bool IsPay { get; set; }
         public DateTime? PaymentDate { get; set; }
-        public string OffCode { get; set; }
+        public string? OffCode { get; set; }
         #endregion
         #region relations
-        public User User { get; set; }
-        public ICollection<OrderDetail> OrderDetails { get; set; }
+        public virtual User User { get; set; }
+        public virtual ICollection<OrderDetail> OrderDetails { get; set; }
 
         #endregion
     }

@@ -10,11 +10,11 @@ namespace DidMark.Core.DTO.Products
 {
     public class FilterProductsDTO : BasePaging
     {
-        public string Title { get; set; }
+        public string? Title { get; set; }
         public int StartPrice { get; set; }
         public int EndPrice { get; set; }
-        public List<Product> Products { get; set; }
-        public List<long> Categories { get; set; }
+        public List<Product>? Products { get; set; }
+        public List<long>? Categories { get; set; }
         public ProductOrderBy OrderBy { get; set; }
         public FilterProductsDTO SetPaging(BasePaging paging)
         {

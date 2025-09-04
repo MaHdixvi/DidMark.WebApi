@@ -1,17 +1,14 @@
-﻿using DidMark.DataLayer.Entities.Common;
-using DidMark.DataLayer.Entities.Orders;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DidMark.DataLayer.Entities.Product
+namespace DidMark.Core.DTO.Products
 {
-    public class Product : BaseEntity
+    public class AddProductDTO
     {
-        #region properties
         [Display(Name = "تصویر")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(150, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
@@ -25,7 +22,7 @@ namespace DidMark.DataLayer.Entities.Product
 
         [Display(Name = "قیمت")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        
+
         public int Price { get; set; }
 
         [Display(Name = "توضیحات")]
@@ -40,7 +37,7 @@ namespace DidMark.DataLayer.Entities.Product
         [Display(Name = "رنگ")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string Color { get; set; }
+        public required string Color { get; set; }
 
         [Display(Name = "کد")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
@@ -60,13 +57,5 @@ namespace DidMark.DataLayer.Entities.Product
 
         [Display(Name = "ویژه")]
         public bool IsSpecial { get; set; }
-        #endregion
-
-        #region relations
-        public virtual ICollection<ProductGalleries> ProductGalleries { get; set; }
-        public virtual ICollection<ProductVisit> ProductVisit { get; set; }
-        public virtual ICollection<ProductSelectedCategories> ProductSelectedCategories { get; set; }
-        public virtual ICollection<OrderDetail> OrderDetails { get; set; }
-        #endregion
     }
 }

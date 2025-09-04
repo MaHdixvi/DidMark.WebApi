@@ -30,12 +30,6 @@ namespace DidMark.DataLayer.Entities.Account
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
         public string Password { get; set; }
 
-        [Display(Name = "تکرار کلمه عبور")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        [Compare("Password", ErrorMessage = "کلمه های عبور مغایرت دارند")]
-        public string ConfirmPassword { get; set; }
-
         [Display(Name = "نام")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
@@ -47,14 +41,12 @@ namespace DidMark.DataLayer.Entities.Account
         public string LastName { get; set; }
 
         [Display(Name = "شهر")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string City { get; set; }
+        public string? City { get; set; }
 
         [Display(Name = "استان")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string Province { get; set; }
+        public string? Province { get; set; }
 
         [Display(Name = "کدملی")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
@@ -62,9 +54,8 @@ namespace DidMark.DataLayer.Entities.Account
         public string NationalCode { get; set; }
 
         [Display(Name = "آدرس")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
         [Display(Name = "شماره تلفن")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
@@ -91,10 +82,10 @@ namespace DidMark.DataLayer.Entities.Account
 
         #region Relations
 
-        public ICollection<UserRole> UserRoles { get; set; }
+        public virtual ICollection<UserRole> UserRoles { get; set; }
         public bool IsActivated { get; set; }
 
-        public ICollection<Order> Orders { get; set; }
+        public virtual ICollection<Order> Orders { get; set; }
 
         #endregion
     }

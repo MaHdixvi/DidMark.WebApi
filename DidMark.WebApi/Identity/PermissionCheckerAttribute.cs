@@ -23,12 +23,12 @@ namespace DidMark.WebApi.Identity
                 var result = _accessService.CheckUserRole(userId, _role).Result;
                 if (!result)
                 {
-                    context.Result = JsonResponseStatus.NoAccess();
+                    context.Result = JsonResponseStatus.Forbidden();
                 }
             }
             else
             {
-                context.Result = JsonResponseStatus.NoAccess();
+                context.Result = JsonResponseStatus.Forbidden();
             }
         }
 

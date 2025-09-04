@@ -26,7 +26,7 @@ namespace DidMark.DataLayer.Entities.Access
 
         #region Relations
 
-        public ICollection<UserRole> UserRoles { get; set; }
+        public virtual ICollection<UserRole> UserRoles { get; set; }
 
         #endregion
     }

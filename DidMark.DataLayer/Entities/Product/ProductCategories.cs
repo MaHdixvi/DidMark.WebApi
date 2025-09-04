@@ -26,8 +26,8 @@ namespace DidMark.DataLayer.Entities.Product
         #region relations
 
         [ForeignKey(name: "ParentId")]
-        public ProductCategories ParentCategories { get; set; }
-        public ICollection<ProductSelectedCategories> ProductSelectedCategories { get; set; }
+        public virtual ProductCategories ParentCategories { get; set; }
+        public virtual ICollection<ProductSelectedCategories> ProductSelectedCategories { get; set; }
         #endregion
     }
 }

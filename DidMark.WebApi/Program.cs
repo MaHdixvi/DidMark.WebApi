@@ -1,48 +1,75 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Mvc.Formatters;
+﻿using DidMark.Core.Security;
+using DidMark.Core.Services.Implementations;
+using DidMark.Core.Services.Interfaces;
+using DidMark.Core.Utilities.Convertors;
 using DidMark.DataLayer.Db;
 using DidMark.DataLayer.Repository;
-using DidMark.Core.Services.Interfaces;
-using DidMark.Core.Services.Implementations;
-using DidMark.Core.Security;
-using DidMark.Core.Utilities.Convertors;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.SpaServices.AngularCli;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Add services to the container.
-
-builder.Services.AddControllers();
-//Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Add services to the container.
+builder.Services.AddControllers()
+    .AddNewtonsoftJson();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+// Configure Swagger with JWT authentication
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "DidMark API",
+        Version = "v1",
+        Description = "API for DidMark application with JWT authentication"
+    });
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token in the format: Bearer {token}"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
 
+// Add configuration
 builder.Services.AddSingleton<IConfiguration>(
-                new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile($"appsettings.json")
-                    .Build()
-            );
+    new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .Build()
+);
 
-
-
-#region Add DbContext
-
+#region Database Configuration
 ConfigurationManager configuration = builder.Configuration;
 builder.Services.AddDbContext<MasterContext>(options =>
-    options.UseSqlServer(
-        configuration.GetConnectionString("DefaultConnection"))
-    );
-
+    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
 #endregion
 
 #region Application Services
-
+builder.Services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISliderService, SliderService>();
@@ -52,24 +79,12 @@ builder.Services.AddScoped<IViewRenderService, RenderViewToString>();
 builder.Services.AddScoped<IContactUs, ContactUsService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAccessService, AccessService>();
-
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-builder.Services.AddMvcCore().AddRazorViewEngine();
-builder.Services.AddControllers().AddNewtonsoftJson();
-builder.Services.AddCors();
 builder.Services.AddMvc();
-
-IInputFormatter GetJsonPatchInputFormatter()
-{
-    throw new NotImplementedException();
-}
-
 #endregion
 
-
 #region Authentication
-//https://localhost:7265
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -79,77 +94,49 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = "https://api.Allapar.com",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("DidmarkJwtBearer"))
+            ValidIssuer = configuration["JwtSettings:ValidIssuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:SecretKey"] ?? "DidmarkJwtBearer"))
         };
     });
-
 #endregion
 
 #region CORS
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("EnableCors", builder =>
     {
-        builder.AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .Build();
+        builder.WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>())
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .AllowCredentials();
     });
 });
-
 #endregion
-
-builder.Services.AddSpaStaticFiles(configuration =>
-{
-    configuration.RootPath = "frontend-project/dist/vira-aron-raika";
-});
-
-
 
 var app = builder.Build();
 
-//Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
-}
-if (!app.Environment.IsDevelopment())
-{
-    app.UseSpaStaticFiles();
-}
-app.UseSpa(spa =>
-{
-    spa.Options.SourcePath = "frontend-project";
-    if (!app.Environment.IsDevelopment())
+    app.UseSwaggerUI(options =>
     {
-        spa.UseAngularCliServer(npmScript: "start");
-    }
-});
-
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "DidMark API v1");
+        options.RoutePrefix = "swagger"; // Set Swagger UI to be accessible at /swagger
+    });
+    app.Logger.LogInformation("Swagger UI is enabled at /swagger");
+}
+else
+{
+    app.Logger.LogInformation("Swagger UI is disabled in non-Development environment");
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
-
+app.UseDefaultFiles();
 app.UseCors("EnableCors");
-app.UseCors(builder => builder
-    .AllowAnyHeader()
-    .AllowAnyMethod()
-    .SetIsOriginAllowed((host) => true)
-    .AllowCredentials()
-);
-
-
 app.UseAuthentication();
-
 app.UseAuthorization();
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
 app.MapControllers();
-
 app.Run();

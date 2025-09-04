@@ -41,7 +41,7 @@ namespace DidMark.Core.Services.Implementations
         #region user role
         public async Task<bool> CheckUserRole(long userId, string role)
         {
-            var result = await _userRoleRepository.GetEntitiesQuery().AsQueryable().AnyAsync(s => s.UserId == userId && s.Role.RoleName == role);
+            var result = await _userRoleRepository.GetEntitiesQuery().AsQueryable().AnyAsync(s => s.UserId == userId && s.Role.RoleTitle == role);
             return result;
         }
         #endregion

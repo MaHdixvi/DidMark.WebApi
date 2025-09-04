@@ -14,6 +14,8 @@ namespace DidMark.DataLayer.Repository
         Task<TEntity> GetEntityById(long entityId);
 
         Task AddEntity(TEntity entity);
+        Task AddRange(IEnumerable<TEntity> entities);
+
 
         void UpdateEntity(TEntity entity);
 

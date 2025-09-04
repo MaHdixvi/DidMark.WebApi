@@ -39,6 +39,10 @@ namespace DidMark.DataLayer.Repository
             entity.LastUpdateDate = entity.CreateDate;
             await dbSet.AddAsync(entity);
         }
+        public async Task AddRange(IEnumerable<TEntity> entities)
+        {
+            await dbSet.AddRangeAsync(entities);
+        }
 
         public void UpdateEntity(TEntity entity)
         {

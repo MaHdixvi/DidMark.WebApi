@@ -1,177 +1,194 @@
 ﻿using DidMark.Core.DTO.Account;
+using DidMark.Core.Security;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
+using DidMark.Core.Utilities.Enums;
 using DidMark.Core.Utilities.Extensions.Identity;
-using DidMark.DataLayer.Entities.Account;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace DidMark.WebApi.Controllers
 {
-    public class AccountController : SiteBaseController
+    [ApiController]
+    [Route("api/v1/[controller]")]
+    public class AccountController : ControllerBase
     {
-        #region costructor
+        private readonly IUserService _userService;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        private IUserService userService;
-
-        public AccountController(IUserService userService)
+        public AccountController(IUserService userService, IJwtTokenService jwtTokenService)
         {
-            this.userService = userService;
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _jwtTokenService = jwtTokenService ?? throw new ArgumentNullException(nameof(jwtTokenService));
         }
-
-        #endregion
-
-        #region Register
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDTO register)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var res = await userService.RegisterUser(register);
-
-                switch (res)
-                {
-                    case RegisterUserResult.EmailExists:
-                        return JsonResponseStatus.Error(new { info = "EmailExist" });
-                    case RegisterUserResult.PhoneNumberExists:
-                        return JsonResponseStatus.Error(new { info = "PhoneNumberExist" });
-                }
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
             }
 
-            return JsonResponseStatus.Success();
+            var result = await _userService.RegisterUserAsync(register);
+
+            return result switch
+            {
+                RegisterUserResult.EmailExists => JsonResponseStatus.Conflict(new { message = "ایمیل قبلاً ثبت شده است" }),
+                RegisterUserResult.PhoneNumberExists => JsonResponseStatus.Conflict(new { message = "شماره تلفن قبلاً ثبت شده است" }),
+                RegisterUserResult.Success => JsonResponseStatus.Created(new { message = "ثبت‌نام با موفقیت انجام شد. لطفاً ایمیل خود را بررسی کنید." }),
+                _ => JsonResponseStatus.Error(new { message = "خطای ناشناخته در ثبت‌نام" })
+            };
         }
-
-        #endregion
-
-        #region Login
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDTO login)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var res = await userService.LoginUser(login);
-
-                switch (res)
-                {
-                    case LoginUserResult.IncorrectData:
-                        return JsonResponseStatus.NotFound(new { message = "کاربری با مشخصات وارد شده یافت نشد" });
-
-                    case LoginUserResult.NotActivated:
-                        return JsonResponseStatus.Error(new { message = "حساب کاربری شما فعال نشده است" });
-
-                    case LoginUserResult.Success:
-                        var user = await userService.GetUserByEmail(login.Email);
-                        var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("DidmarkJwtBearer"));
-                        var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-                        var tokenOptions = new JwtSecurityToken(
-                            issuer: "https://localhost:44381",
-                            claims: new List<Claim>
-                            {
-                                new Claim(ClaimTypes.Name, user.Email,user.PhoneNumber),
-                                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-                            },
-                            expires: DateTime.Now.AddDays(30),
-                            signingCredentials: signinCredentials
-                        );
-
-                        var tokenString = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
-
-                        return JsonResponseStatus.Success(new
-                        {
-                            token = tokenString,
-                            expireTime = 30,
-                            firstName = user.FirstName,
-                            lastName = user.LastName,
-                            userId = user.Id
-                        });
-                }
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
             }
 
-            return JsonResponseStatus.Error();
+            var result = await _userService.LoginUserAsync(login);
+
+            switch (result)
+            {
+                case LoginUserResult.IncorrectData:
+                    return JsonResponseStatus.Unauthorized(new { message = "ایمیل یا رمز عبور اشتباه است" });
+
+                case LoginUserResult.NotActivated:
+                    return JsonResponseStatus.Forbidden(new { message = "حساب کاربری شما فعال نشده است" });
+
+                case LoginUserResult.Success:
+                    var user = await _userService.GetUserByEmailAsync(login.Email);
+                    if (user == null)
+                    {
+                        return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
+                    }
+
+                    var token = _jwtTokenService.GenerateJwtToken(user);
+                    return JsonResponseStatus.Success(new
+                    {
+                        token,
+                        userInfo = new
+                        {
+                            user.Id,
+                            user.FirstName,
+                            user.LastName,
+                            user.Email,
+                            user.PhoneNumber
+                        }
+                    });
+
+                default:
+                    return JsonResponseStatus.Error(new { message = "خطای ناشناخته در ورود" });
+            }
         }
 
-        #endregion
-
-        #region Check User Authentication
-
-        [HttpPost("check-auth")]
+        [HttpGet("check-auth")]
         public async Task<IActionResult> CheckUserAuth()
         {
-            if (User.Identity.IsAuthenticated)
+            if (!User.Identity?.IsAuthenticated ?? true)
             {
-                var user = await userService.GetUserByUserId(User.GetUserId());
-                return JsonResponseStatus.Success(new
-                {
-                    userId = user.Id,
-                    firstName = user.FirstName,
-                    lastName = user.LastName,
-                    email = user.Email,
-                    username = user.Username,
-                    password = user.Password,
-                    phoneNumber = user.PhoneNumber,
-
-                });
+                return JsonResponseStatus.Unauthorized(new { message = "کاربر احراز هویت نشده است" });
             }
 
-            return JsonResponseStatus.Error();
+            var userId = User.GetUserId();
+            var user = await _userService.GetUserByIdAsync(userId);
+
+            if (user == null)
+            {
+                return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
+            }
+
+            return JsonResponseStatus.Success(new
+            {
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.Email,
+                user.Username,
+                user.PhoneNumber
+            });
         }
 
-        #endregion
-
-
-        #region Activate User Account
-
-        [HttpGet("activate-account/{id}")]
-        public async Task<IActionResult> ActivateAccount(string id)
+        [HttpGet("activate-account/{activationCode}")]
+        public async Task<IActionResult> ActivateAccount(string activationCode)
         {
-            var user = await userService.GetUserByEmailActiveCode(id);
-
-            if (user != null)
+            if (string.IsNullOrEmpty(activationCode))
             {
-                userService.ActivateUser(user);
-                return JsonResponseStatus.Success();
+                return JsonResponseStatus.BadRequest(new { message = "کد فعال‌سازی نامعتبر است" });
             }
 
-            return JsonResponseStatus.NotFound();
+            var user = await _userService.GetUserByActivationCodeAsync(activationCode);
+            if (user == null)
+            {
+                return JsonResponseStatus.NotFound(new { message = "کد فعال‌سازی نامعتبر یا منقضی شده است" });
+            }
+
+            var activationResult = await _userService.ActivateUserAsync(user);
+            return activationResult
+                ? JsonResponseStatus.Success(new { message = "حساب کاربری با موفقیت فعال شد" })
+                : JsonResponseStatus.Error(new { message = "خطا در فعال‌سازی حساب کاربری" });
         }
 
-        #endregion
-
-        #region Sign Out
-
-        [HttpGet("sign-out")]
-        public async Task<IActionResult> LogOut()
+        [HttpPost("sign-out")]
+        public async Task<IActionResult> SignOut()
         {
-            if (User.Identity.IsAuthenticated)
+            if (!User.Identity?.IsAuthenticated ?? true)
             {
-                await HttpContext.SignOutAsync();
-                return JsonResponseStatus.Success();
+                return JsonResponseStatus.Unauthorized(new { message = "کاربر احراز هویت نشده است" });
             }
 
-            return JsonResponseStatus.Error();
+            await HttpContext.SignOutAsync();
+            return JsonResponseStatus.Success(new { message = "خروج با موفقیت انجام شد" });
         }
 
-        #endregion
-
-        #region edit user account
-        [HttpPost("edit-user")]
-
-        public async Task<IActionResult> EditUser([FromBody] EditUserDTO editUser)
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] EditUserDTO editUser)
         {
-            Task.Delay(3000);
-            if (User.Identity.IsAuthenticated)
+            if (!ModelState.IsValid)
             {
-                await userService.EditUserInfo(editUser, User.GetUserId());
-                return JsonResponseStatus.Success(returnData: new { message = "اطلاعات کاربر با موفقیت ویرایش شد" });
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
             }
-            return JsonResponseStatus.Success();
+
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return JsonResponseStatus.Unauthorized(new { message = "کاربر احراز هویت نشده است" });
+            }
+
+            var userId = User.GetUserId();
+            var updateResult = await _userService.UpdateUserAsync(editUser, userId);
+
+            return updateResult
+                ? JsonResponseStatus.Success(new { message = "اطلاعات کاربر با موفقیت ویرایش شد" })
+                : JsonResponseStatus.Error(new { message = "خطا در ویرایش اطلاعات کاربر" });
         }
-        #endregion
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO changePassword)
+        {
+            if (!ModelState.IsValid)
+            {
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
+            }
+
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return JsonResponseStatus.Unauthorized(new { message = "کاربر احراز هویت نشده است" });
+            }
+
+            var userId = User.GetUserId();
+            var changeResult = await _userService.ChangePasswordAsync(changePassword, userId);
+
+            return changeResult switch
+            {
+                ChangePasswordResult.Success => JsonResponseStatus.Success(new { message = "رمز عبور با موفقیت تغییر یافت" }),
+                ChangePasswordResult.IncorrectCurrentPassword => JsonResponseStatus.BadRequest(new { message = "رمز عبور فعلی اشتباه است" }),
+                ChangePasswordResult.SameAsOldPassword => JsonResponseStatus.BadRequest(new { message = "رمز عبور جدید نباید با رمز قبلی یکسان باشد" }),
+                ChangePasswordResult.UserNotFound => JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" }),
+                _ => JsonResponseStatus.Error(new { message = "خطا در تغییر رمز عبور" })
+            };
+        }
     }
 }

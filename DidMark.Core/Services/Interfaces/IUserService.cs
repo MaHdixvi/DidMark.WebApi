@@ -1,4 +1,5 @@
 ﻿using DidMark.Core.DTO.Account;
+using DidMark.Core.Utilities.Enums;
 using DidMark.DataLayer.Entities.Account;
 using System;
 using System.Collections.Generic;
@@ -10,19 +11,16 @@ namespace DidMark.Core.Services.Interfaces
 {
     public interface IUserService : IDisposable
     {
-        Task<List<User>> GetAllUsers();
-
-        Task<RegisterUserResult> RegisterUser(RegisterUserDTO register);
-        bool IsUserExistsByEmail(string email);
-        Task<LoginUserResult> LoginUser(LoginUserDTO login, bool checkAdminRole = false);
-        Task<User> GetUserByEmail(string email);
-
-
-        Task<User> GetUserByUserId(long userId);
-
-        void ActivateUser(User user);
-        Task<User> GetUserByEmailActiveCode(string emailActiveCode);
-        Task EditUserInfo(EditUserDTO user, long userId);
-        Task<bool> IsUserAdmin(long userId);
+        Task<List<User>> GetAllUsersAsync();
+        Task<RegisterUserResult> RegisterUserAsync(RegisterUserDTO register);
+        Task<bool> ExistsByEmailAsync(string email);
+        Task<LoginUserResult> LoginUserAsync(LoginUserDTO login, bool checkAdminRole = false);
+        Task<ChangePasswordResult> ChangePasswordAsync(ChangePasswordDTO changePassword, long userId);
+        Task<User?> GetUserByEmailAsync(string email);
+        Task<User?> GetUserByIdAsync(long userId);
+        Task<bool> ActivateUserAsync(User user);
+        Task<User?> GetUserByActivationCodeAsync(string activationCode);
+        Task<bool> UpdateUserAsync(EditUserDTO user, long userId);
+        Task<bool> IsAdminAsync(long userId);
     }
 }

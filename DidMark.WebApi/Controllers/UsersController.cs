@@ -20,7 +20,7 @@ namespace DidMark.WebApi.Controllers
         [HttpGet("Users")]
         public async Task<IActionResult> Users()
         {
-            return new ObjectResult(await userService.GetAllUsers());
+            return new ObjectResult(await userService.GetAllUsersAsync());
         }
 
         #endregion

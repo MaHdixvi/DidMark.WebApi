@@ -2,65 +2,104 @@
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace DidMark.WebApi.Controllers
 {
+    [ApiController]
+    [Route("api/v1/[controller]")]
     public class ProductController : SiteBaseController
     {
+        #region Fields
+        private readonly IProductService _productService;
+        #endregion
 
-        #region constructor
-
-        private IProductService productService;
-
+        #region Constructor
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProductController"/> class.
+        /// </summary>
+        /// <param name="productService">The product service for handling product-related operations.</param>
         public ProductController(IProductService productService)
         {
-            this.productService = productService;
+            _productService = productService ?? throw new ArgumentNullException(nameof(productService));
         }
         #endregion
 
-        #region products
+        #region Filter Products
+        /// <summary>
+        /// Retrieves a list of products based on the provided filter criteria.
+        /// </summary>
+        /// <param name="filter">The filter criteria for products.</param>
+        /// <returns>A JSON response containing the filtered products.</returns>
         [HttpGet("filter-products")]
         public async Task<IActionResult> GetProducts([FromQuery] FilterProductsDTO filter)
         {
-            filter.TakeEntity = 12;
-            var products = await productService.FilterProducts(filter);
+            if (filter == null)
+            {
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های فیلتر ارائه نشده است" });
+            }
 
-
+            filter.TakeEntity = 12; // Limit the number of products returned
+            var products = await _productService.FilterProducts(filter);
             return JsonResponseStatus.Success(products);
         }
         #endregion
 
-        #region Get products catagories
+        #region Get Product Categories
+        /// <summary>
+        /// Retrieves all active product categories.
+        /// </summary>
+        /// <returns>A JSON response containing the list of active product categories.</returns>
         [HttpGet("product-active-categories")]
         public async Task<IActionResult> GetProductCategories()
         {
-            return JsonResponseStatus.Success(await productService.GetAllActiveProductCategories());
+            var categories = await _productService.GetAllActiveProductCategories();
+            return JsonResponseStatus.Success(categories);
         }
-
         #endregion
-        #region Get Single Product
 
-        [HttpGet(template: "single-product/{id}")]
+        #region Get Single Product
+        /// <summary>
+        /// Retrieves a single product and its active galleries by product ID.
+        /// </summary>
+        /// <param name="id">The ID of the product.</param>
+        /// <returns>A JSON response containing the product and its galleries, or a not found status.</returns>
+        [HttpGet("single-product/{id}")]
         public async Task<IActionResult> GetProduct(long id)
         {
-            var Product = await productService.GetProductById(id);
-            var ProductGalleries = await productService.GetProductActiveGalleries(id);
+            if (id <= 0)
+            {
+                return JsonResponseStatus.BadRequest(new { message = "شناسه محصول نامعتبر است" });
+            }
 
-            if (Product != null)
-                return JsonResponseStatus.Success(returnData: new { product = Product, galleries = ProductGalleries });
+            var product = await _productService.GetProductById(id);
+            if (product == null)
+            {
+                return JsonResponseStatus.NotFound(new { message = "محصول یافت نشد" });
+            }
 
-            return JsonResponseStatus.NotFound();
+            var productGalleries = await _productService.GetProductActiveGalleries(id);
+            return JsonResponseStatus.Success(new { product, galleries = productGalleries });
         }
         #endregion
-        #region relatedproduct
-        [HttpGet("related-products/{Id}")]
 
-        public async Task<IActionResult> GetRelatedProducts(long Id)
+        #region Get Related Products
+        /// <summary>
+        /// Retrieves related products for a given product ID.
+        /// </summary>
+        /// <param name="id">The ID of the product.</param>
+        /// <returns>A JSON response containing the related products.</returns>
+        [HttpGet("related-products/{id}")]
+        public async Task<IActionResult> GetRelatedProducts(long id)
         {
-            var relatedproducts = await productService.GetRelatedProducts(Id);
-            return JsonResponseStatus.Success(relatedproducts);
+            if (id <= 0)
+            {
+                return JsonResponseStatus.BadRequest(new { message = "شناسه محصول نامعتبر است" });
+            }
+
+            var relatedProducts = await _productService.GetRelatedProducts(id);
+            return JsonResponseStatus.Success(relatedProducts);
         }
         #endregion
-
     }
 }

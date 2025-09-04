@@ -30,8 +30,6 @@ namespace DidMark.Core.DTO.Products
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         public string ShortDescription { get; set; }
 
-        public long ProductId { get; set; }
-
         [Display(Name = "رنگ")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
@@ -39,7 +37,6 @@ namespace DidMark.Core.DTO.Products
 
         [Display(Name = "کد")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
         public long Code { get; set; }
 
         [Display(Name = "سایز")]
@@ -49,7 +46,6 @@ namespace DidMark.Core.DTO.Products
 
         [Display(Name = "تعداد محصول")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
         public int NumberofProduct { get; set; }
 
         [Display(Name = "موجود/به اتمام رسیده")]

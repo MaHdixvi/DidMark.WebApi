@@ -1,109 +1,106 @@
 ﻿using DidMark.Core.DTO.Account;
+using DidMark.Core.Security;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
 using DidMark.Core.Utilities.Extensions.Identity;
 using DidMark.DataLayer.Entities.Account;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace DidMark.WebApi.Controllers
 {
-    public class AdminAccountController : SiteBaseController
+    [ApiController]
+    [Route("api/v1/admin/[controller]")]
+    public class AdminAccountController : ControllerBase
     {
-        #region constructor
+        private readonly IUserService _userService;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        private readonly IUserService userService;
-
-        public AdminAccountController(IUserService userService)
+        public AdminAccountController(IUserService userService, IJwtTokenService jwtTokenService)
         {
-            this.userService = userService;
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _jwtTokenService = jwtTokenService ?? throw new ArgumentNullException(nameof(jwtTokenService));
         }
-
-        #endregion
-
-        #region Login
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDTO login)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var res = await userService.LoginUser(login, true);
-
-                switch (res)
-                {
-                    case LoginUserResult.IncorrectData:
-                        return JsonResponseStatus.NotFound(new { message = "کاربری با مشخصات وارد شده یافت نشد" });
-
-                    case LoginUserResult.NotActivated:
-                        return JsonResponseStatus.Error(new { message = "حساب کاربری شما فعال نشده است" });
-
-                    case LoginUserResult.NotAdmin:
-                        return JsonResponseStatus.Error(new { message = "شما به این بخش دسترسی ندارید" });
-
-                    case LoginUserResult.Success:
-                        var user = await userService.GetUserByEmail(login.Email);
-                        var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("AngularEshopJwtBearer"));
-                        var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-                        var tokenOptions = new JwtSecurityToken(
-                            issuer: "https://localhost:44381",
-                            claims: new List<Claim>
-                            {
-                                new Claim(ClaimTypes.Name, user.Email),
-                                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-                            },
-                            expires: DateTime.Now.AddDays(30),
-                            signingCredentials: signinCredentials
-                        );
-
-                        var tokenString = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
-
-                        return JsonResponseStatus.Success(new
-                        {
-                            token = tokenString,
-                            expireTime = 30,
-                            firstName = user.FirstName,
-                            lastName = user.LastName,
-                            userId = user.Id
-                        });
-                }
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
             }
 
-            return JsonResponseStatus.Error();
-        }
+            var result = await _userService.LoginUserAsync(login, checkAdminRole: true);
 
-        #endregion
-        #region Check User Authentication
-
-        [HttpPost("check-auth")]
-        public async Task<IActionResult> CheckUserAuth()
-        {
-            if (User.Identity.IsAuthenticated)
+            switch (result)
             {
-                var user = await userService.GetUserByUserId(User.GetUserId());
-                if (!await userService.IsUserAdmin(user.Id))
-                {
+                case LoginUserResult.IncorrectData:
+                    return JsonResponseStatus.Unauthorized(new { message = "ایمیل یا رمز عبور اشتباه است" });
+
+                case LoginUserResult.NotActivated:
+                    return JsonResponseStatus.Forbidden(new { message = "حساب کاربری شما فعال نشده است" });
+
+                case LoginUserResult.NotAdmin:
+                    return JsonResponseStatus.Forbidden(new { message = "شما دسترسی ادمین ندارید" });
+
+                case LoginUserResult.Success:
+                    var user = await _userService.GetUserByEmailAsync(login.Email);
+                    if (user == null)
+                    {
+                        return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
+                    }
+
+                    var token = _jwtTokenService.GenerateJwtToken(user);
                     return JsonResponseStatus.Success(new
                     {
-                        userId = user.Id,
-                        firstName = user.FirstName,
-                        lastName = user.LastName,
-                        email = user.Email,
-                        username = user.Username,
-                        password = user.Password,
-                        phoneNumber = user.PhoneNumber,
-
+                        token,
+                        expireTime = 30, // Matches JwtSettings.ExpireDays
+                        userInfo = new
+                        {
+                            user.Id,
+                            user.FirstName,
+                            user.LastName,
+                            user.Email
+                        }
                     });
-                }
 
+                default:
+                    return JsonResponseStatus.Error(new { message = "خطای ناشناخته در ورود" });
             }
-
-            return JsonResponseStatus.Error();
         }
 
-        #endregion
+        [HttpGet("check-auth")]
+        public async Task<IActionResult> CheckUserAuth()
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return JsonResponseStatus.Unauthorized(new { message = "کاربر احراز هویت نشده است" });
+            }
+
+            var userId = User.GetUserId();
+            var user = await _userService.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
+            }
+
+            if (!await _userService.IsAdminAsync(user.Id))
+            {
+                return JsonResponseStatus.Forbidden(new { message = "شما دسترسی ادمین ندارید" });
+            }
+
+            return JsonResponseStatus.Success(new
+            {
+                userInfo = new
+                {
+                    user.Id,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email,
+                    user.Username,
+                    user.PhoneNumber
+                }
+            });
+        }
     }
 }
