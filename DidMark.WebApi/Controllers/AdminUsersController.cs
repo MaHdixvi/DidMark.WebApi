@@ -1,5 +1,7 @@
 ﻿using DidMark.Core.DTO.Account;
+using DidMark.Core.DTO.Roles;
 using DidMark.Core.DTO.Users;
+using DidMark.Core.Services.Implementations;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
 using DidMark.WebApi.Identity;
@@ -14,11 +16,14 @@ namespace DidMark.WebApi.Controllers
     public class AdminUsersController : SiteBaseController
     {
         private readonly IUserService _userService;
+        private readonly IRoleService _roleService;
+
 
         #region Constructor
-        public AdminUsersController(IUserService userService)
+        public AdminUsersController(IUserService userService, IRoleService roleService)
         {
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _roleService = roleService ?? throw new ArgumentNullException(nameof(roleService));
         }
         #endregion
 
@@ -73,7 +78,49 @@ namespace DidMark.WebApi.Controllers
 
             return JsonResponseStatus.Success(new { message = "وضعیت کاربر تغییر یافت" });
         }
-
         #endregion
+        #region Roles
+
+        [HttpGet("get-all")]
+        [PermissionChecker("Admin")]
+        public async Task<IActionResult> GetAllRoles()
+        {
+            var roles = await _roleService.GetAllRolesAsync();
+            return JsonResponseStatus.Success(roles);
+        }
+
+        [HttpPost("assign")]
+        [PermissionChecker("Admin")]
+        public async Task<IActionResult> AssignRole([FromBody] UserRoleAssignDTO dto)
+        {
+            if (dto == null) return JsonResponseStatus.BadRequest(new { message = "اطلاعات ارسال نشده است" });
+
+            var result = await _roleService.AssignRoleToUserAsync(dto);
+            if (!result) return JsonResponseStatus.BadRequest(new { message = "نقش قبلا به کاربر اختصاص داده شده است" });
+
+            return JsonResponseStatus.Success(new { message = "نقش به کاربر اختصاص یافت" });
+        }
+
+        [HttpPost("remove")]
+        [PermissionChecker("Admin")]
+        public async Task<IActionResult> RemoveRole([FromBody] UserRoleAssignDTO dto)
+        {
+            if (dto == null) return JsonResponseStatus.BadRequest(new { message = "اطلاعات ارسال نشده است" });
+
+            var result = await _roleService.RemoveRoleFromUserAsync(dto);
+            if (!result) return JsonResponseStatus.BadRequest(new { message = "نقش به کاربر اختصاص داده نشده بود" });
+
+            return JsonResponseStatus.Success(new { message = "نقش از کاربر حذف شد" });
+        }
+
+        [HttpGet("user-roles/{userId:long}")]
+        [PermissionChecker("Admin")]
+        public async Task<IActionResult> GetUserRoles(long userId)
+        {
+            var roles = await _roleService.GetUserRolesAsync(userId);
+            return JsonResponseStatus.Success(roles);
+        }
+        #endregion
+
     }
 }
