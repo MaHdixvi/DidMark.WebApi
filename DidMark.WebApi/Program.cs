@@ -76,6 +76,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductCategoryService, ProductCategoryService>();
 builder.Services.AddScoped<IProductGalleryService, ProductGalleryService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ISmsService, SmsService>();
 builder.Services.AddScoped<ISliderService, SliderService>();
 builder.Services.AddScoped<IPasswordHelper, PasswordHelper>();
 builder.Services.AddScoped<IMailSender, SendEmail>();
