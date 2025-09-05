@@ -16,7 +16,7 @@ namespace DidMark.Core.Services.Implementations
 {
     public class UserService : IUserService
     {
-        private readonly IGenericRepository<User> _userRepository;
+        private readonly IGenericRepository<User> _userRepository;  
         private readonly IGenericRepository<UserRole> _userRoleRepository;
         private readonly IPasswordHelper _passwordHelper;
         private readonly IMailSender _mailSender;
