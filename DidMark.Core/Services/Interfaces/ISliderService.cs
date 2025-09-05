@@ -1,4 +1,5 @@
-﻿using DidMark.DataLayer.Entities.Site;
+﻿using DidMark.Core.DTO.Slider;
+using DidMark.DataLayer.Entities.Site;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,11 @@ namespace DidMark.Core.Services.Interfaces
 {
     public interface ISliderService : IDisposable
     {
-        Task<List<Slider>> GetAllSliders();
-        Task<List<Slider>> GetActiveSliders();
-        Task AddSlider(Slider slider);
-        Task UpdateSlider(Slider slider);
-        Task<Slider> GetSliderById(long sliderId);
+        Task<List<SliderDTO>> GetAllSliders();
+        Task<List<SliderDTO>> GetActiveSliders();
+        Task<(bool Success, long Id)> AddSlider(AddSliderDTO dto);
+        Task<(bool Success, long Id)> UpdateSlider(EditSliderDTO dto);
+        Task<SliderDTO?> GetSliderById(long sliderId);
+        Task<bool> DeleteSlider(long sliderId);
     }
 }

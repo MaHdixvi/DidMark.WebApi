@@ -1,4 +1,5 @@
 ﻿using DidMark.Core.DTO.Account;
+using DidMark.Core.DTO.Users;
 using DidMark.Core.Security;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Convertors;
@@ -60,7 +61,6 @@ namespace DidMark.Core.Services.Implementations
                 PhoneNumber = register.PhoneNumber.SanitizeText(),
                 PhoneActiveCode = Guid.NewGuid().ToString(),
                 Username = register.Username.SanitizeText(),
-                IsActivated = true
             };
 
             await _userRepository.AddEntity(user);
@@ -137,9 +137,21 @@ namespace DidMark.Core.Services.Implementations
             if (existingUser == null)
                 return false;
 
-            existingUser.FirstName = user.FirstName.SanitizeText();
-            existingUser.LastName = user.LastName.SanitizeText();
-            existingUser.Address = user.Address.SanitizeText();
+            if (!string.IsNullOrWhiteSpace(user.FirstName))
+                existingUser.FirstName = user.FirstName.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(user.LastName))
+                existingUser.LastName = user.LastName.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(user.Address))
+                existingUser.Address = user.Address.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(user.City))
+                existingUser.City = user.City.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(user.Province))
+                existingUser.Province = user.Province.SanitizeText();
+
 
             _userRepository.UpdateEntity(existingUser);
             await _userRepository.SaveChanges();
@@ -172,6 +184,54 @@ namespace DidMark.Core.Services.Implementations
             await _userRepository.SaveChanges();
             return ChangePasswordResult.Success;
         }
+        public async Task<bool> ToggleStatusAsync(long userId)
+        {
+            var user = await _userRepository.GetEntityById(userId);
+            if (user == null) return false;
+
+            user.IsActivated = !user.IsActivated;
+            _userRepository.UpdateEntity(user);
+            await _userRepository.SaveChanges();
+            return true;
+        }
+        public async Task<bool> UpdateUserByAdminAsync(EditUserByAdminDTO dto)
+        {
+            var existingUser = await _userRepository.GetEntityById(dto.Id);
+            if (existingUser == null)
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(dto.FirstName))
+                existingUser.FirstName = dto.FirstName.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(dto.LastName))
+                existingUser.LastName = dto.LastName.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(dto.Username))
+                existingUser.Username = dto.Username.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+                existingUser.Email = dto.Email.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                existingUser.PhoneNumber = dto.PhoneNumber.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(dto.NationalCode))
+                existingUser.NationalCode = dto.NationalCode.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(dto.City))
+                existingUser.City = dto.City.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(dto.Province))
+                existingUser.Province = dto.Province.SanitizeText();
+
+            if (!string.IsNullOrWhiteSpace(dto.Address))
+                existingUser.Address = dto.Address.SanitizeText();
+
+            _userRepository.UpdateEntity(existingUser);
+            await _userRepository.SaveChanges();
+            return true;
+        }
+
 
         public void Dispose()
         {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -11,8 +12,7 @@ namespace DidMark.Core.DTO.Products
     {
         [Display(Name = "تصویر")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        [MaxLength(150, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string ImageName { get; set; }
+        public IFormFile ImageName { get; set; }
 
 
         [Display(Name = "نام محصول")]
@@ -53,9 +53,13 @@ namespace DidMark.Core.DTO.Products
         public int NumberofProduct { get; set; }
 
         [Display(Name = "موجود/به اتمام رسیده")]
+        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+
         public bool IsExists { get; set; }
 
         [Display(Name = "ویژه")]
+        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+
         public bool IsSpecial { get; set; }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using DidMark.Core.DTO.Products;
+using DidMark.Core.DTO.Products.ProductCategory;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
+using DidMark.WebApi.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -12,6 +14,8 @@ namespace DidMark.WebApi.Controllers
     {
         #region Fields
         private readonly IProductService _productService;
+        private readonly IProductCategoryService _categoryService;
+
         #endregion
 
         #region Constructor
@@ -19,9 +23,10 @@ namespace DidMark.WebApi.Controllers
         /// Initializes a new instance of the <see cref="ProductController"/> class.
         /// </summary>
         /// <param name="productService">The product service for handling product-related operations.</param>
-        public ProductController(IProductService productService)
+        public ProductController(IProductService productService, IProductCategoryService categoryService)
         {
             _productService = productService ?? throw new ArgumentNullException(nameof(productService));
+            _categoryService = categoryService ?? throw new ArgumentNullException(nameof(categoryService));
         }
         #endregion
 
@@ -45,18 +50,7 @@ namespace DidMark.WebApi.Controllers
         }
         #endregion
 
-        #region Get Product Categories
-        /// <summary>
-        /// Retrieves all active product categories.
-        /// </summary>
-        /// <returns>A JSON response containing the list of active product categories.</returns>
-        [HttpGet("product-active-categories")]
-        public async Task<IActionResult> GetProductCategories()
-        {
-            var categories = await _productService.GetAllActiveProductCategories();
-            return JsonResponseStatus.Success(categories);
-        }
-        #endregion
+        
 
         #region Get Single Product
         /// <summary>
@@ -100,6 +94,49 @@ namespace DidMark.WebApi.Controllers
             var relatedProducts = await _productService.GetRelatedProducts(id);
             return JsonResponseStatus.Success(relatedProducts);
         }
+        #endregion
+        #region
+        [HttpGet("get-all")]
+        public async Task<IActionResult> GetAll()
+        {
+            var categories = await _categoryService.GetAllActiveCategories();
+            return JsonResponseStatus.Success(categories);
+        }
+
+        [HttpGet("get/{id}")]
+        public async Task<IActionResult> Get(long id)
+        {
+            var category = await _categoryService.GetCategoryById(id);
+            if (category == null)
+                return JsonResponseStatus.NotFound(new { message = "دسته‌بندی یافت نشد" });
+
+            return JsonResponseStatus.Success(category);
+        }
+
+        [HttpGet("get-root-categories")]
+        public async Task<IActionResult> GetRootCategories()
+        {
+            var categories = await _categoryService.GetRootCategories();
+            return JsonResponseStatus.Success(categories);
+        }
+
+        [HttpGet("get-child-categories/{parentId}")]
+        public async Task<IActionResult> GetChildCategories(long parentId)
+        {
+            var categories = await _categoryService.GetChildCategories(parentId);
+            return JsonResponseStatus.Success(categories);
+        }
+
+
+
+        [HttpGet("get-product-categories/{productId}")]
+        public async Task<IActionResult> GetProductCategories(long productId)
+        {
+            var categories = await _categoryService.GetCategoriesOfProduct(productId);
+            return JsonResponseStatus.Success(categories);
+        }
+
+
         #endregion
     }
 }

@@ -1,4 +1,5 @@
 ﻿using DidMark.Core.DTO.Account;
+using DidMark.Core.DTO.Users;
 using DidMark.Core.Utilities.Enums;
 using DidMark.DataLayer.Entities.Account;
 using System;
@@ -22,5 +23,8 @@ namespace DidMark.Core.Services.Interfaces
         Task<User?> GetUserByActivationCodeAsync(string activationCode);
         Task<bool> UpdateUserAsync(EditUserDTO user, long userId);
         Task<bool> IsAdminAsync(long userId);
+        Task<bool> ToggleStatusAsync(long userId);
+        Task<bool> UpdateUserByAdminAsync(EditUserByAdminDTO dto);
+
     }
 }

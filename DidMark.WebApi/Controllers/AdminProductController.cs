@@ -1,4 +1,5 @@
 ﻿using DidMark.Core.DTO.Products;
+using DidMark.Core.DTO.Products.NewFolder;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
 using DidMark.DataLayer.Entities.Product;
@@ -17,14 +18,16 @@ namespace DidMark.WebApi.Controllers
         #region Fields
 
         private readonly IProductService _productService;
+        private readonly IProductGalleryService _productGalleryService;
 
         #endregion
 
         #region Constructor
 
-        public AdminProductController(IProductService productService)
+        public AdminProductController(IProductService productService, IProductGalleryService productGalleryService)
         {
             _productService = productService ?? throw new ArgumentNullException(nameof(productService));
+            _productGalleryService = productGalleryService;
         }
 
         #endregion
@@ -53,7 +56,7 @@ namespace DidMark.WebApi.Controllers
 
         [HttpPost("add-product")]
         [PermissionChecker("Admin")]
-        public async Task<IActionResult> AddProduct([FromBody] AddProductDTO product)
+        public async Task<IActionResult> AddProduct([FromForm] AddProductDTO product)
         {
             if (product == null)
                 return JsonResponseStatus.BadRequest(new { message = "اطلاعات محصول ارسال نشده است" });
@@ -68,7 +71,7 @@ namespace DidMark.WebApi.Controllers
 
         [HttpPut("update-product")]
         [PermissionChecker("Admin")]
-        public async Task<IActionResult> UpdateProduct([FromBody] EditProductDTO product)
+        public async Task<IActionResult> UpdateProduct([FromForm] EditProductDTO product)
         {
             if (product == null)
                 return JsonResponseStatus.BadRequest(new { message = "اطلاعات محصول ارسال نشده است" });
@@ -130,43 +133,46 @@ namespace DidMark.WebApi.Controllers
 
         #endregion
 
-        #region Get Product By User Order
+        //#region Get Product Active Galleries
 
-        [HttpGet("get-product-by-user-order/{id}")]
-        [PermissionChecker("Admin")]
-        public async Task<IActionResult> GetProductByUserOrder(long id)
+        //[HttpGet("get-product-active-galleries/{id}")]
+        //[PermissionChecker("Admin")]
+        //public async Task<IActionResult> GetProductActiveGalleries(long id)
+        //{
+        //    var galleries = await _productService.GetProductActiveGalleries(id);
+        //    return JsonResponseStatus.Success(galleries);
+        //}
+
+        //#endregion
+        #region Product Galleries
+
+        [HttpPost("galleries")]
+        public async Task<IActionResult> AddProductGallery([FromForm] AddProductGalleryDTO dto)
         {
-            var product = await _productService.GetProductByUserOrder(id);
-            if (product == null)
-                return JsonResponseStatus.NotFound(new { message = "محصول یافت نشد" });
-
-            return JsonResponseStatus.Success(product);
+            if (ModelState.IsValid)
+            {
+                var result = await _productGalleryService.AddProductGallery(dto);
+                if (result) return JsonResponseStatus.Success();
+            }
+            return JsonResponseStatus.BadRequest();
         }
 
-        #endregion
-
-        #region Get All Active Product Categories
-
-        [HttpGet("get-active-product-categories")]
-        [PermissionChecker("Admin")]
-        public async Task<IActionResult> GetAllActiveProductCategories()
+        [HttpDelete("galleries/{galleryId}/{productId}")]
+        public async Task<IActionResult> DeleteProductGallery(long galleryId, long productId)
         {
-            var categories = await _productService.GetAllActiveProductCategories();
-            return JsonResponseStatus.Success(categories);
+            var result = await _productGalleryService.DeleteProductGallery(galleryId, productId);
+            if (result) return JsonResponseStatus.Success();
+            return JsonResponseStatus.NotFound(new { message = "گالری برای محصول مشخص یافت نشد" });
         }
 
-        #endregion
 
-        #region Get Product Active Galleries
-
-        [HttpGet("get-product-active-galleries/{id}")]
-        [PermissionChecker("Admin")]
-        public async Task<IActionResult> GetProductActiveGalleries(long id)
+        [HttpGet("{productId}/galleries")]
+        public async Task<IActionResult> GetProductGalleries(long productId)
         {
-            var galleries = await _productService.GetProductActiveGalleries(id);
+            var galleries = await _productGalleryService.GetProductGalleriesByProductId(productId);
             return JsonResponseStatus.Success(galleries);
         }
-
         #endregion
+
     }
 }
