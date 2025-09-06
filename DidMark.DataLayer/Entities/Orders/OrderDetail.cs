@@ -13,7 +13,7 @@ namespace DidMark.DataLayer.Entities.Orders
         public long OrderId { get; set; }
         public long ProductId { get; set; }
         public int Count { get; set; }
-        public int Price { get; set; }
+        public decimal Price { get; set; } // بهتره از decimal برای پول استفاده کنیم
         #endregion
 
         #region relations
