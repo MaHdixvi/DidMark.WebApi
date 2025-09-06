@@ -12,7 +12,7 @@ namespace DidMark.DataLayer.Db;
 
 public partial class MasterContext : DbContext
 {
-    public MasterContext()
+    private MasterContext()
     {
     }
 

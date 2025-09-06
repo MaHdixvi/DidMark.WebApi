@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 namespace DidMark.WebApi.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
     public class SliderController : SiteBaseController
     {
         private readonly ISliderService _sliderService;

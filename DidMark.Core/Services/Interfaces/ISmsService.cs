@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DidMark.Core.DTO.Orders;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +13,7 @@ namespace DidMark.Core.Services.Interfaces
         Task<bool> SendActivationCodeSmsAsync(string phoneNumber, string activationCode);
         Task<bool> SendActivatedAccountSmsAsync(string phoneNumber);
         Task<bool> WaitForActivationAsync(string userName, DateTime dateTime);
+        Task<bool> SendOrderSummarySmsAsync(string phoneNumber, List<OrderBasketDetail> items, decimal totalPrice);
+
     }
 }

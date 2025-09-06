@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 
 namespace DidMark.WebApi.Controllers
 {
-    [ApiController]
-    [Route("api/v1/admin/users")]
     public class AdminUsersController : SiteBaseController
     {
         private readonly IUserService _userService;

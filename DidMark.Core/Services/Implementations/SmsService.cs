@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DidMark.Core.DTO.Orders;
+using DidMark.Core.DTO.SMS;
+using DidMark.Core.Services.Interfaces;
+using DidMark.DataLayer.Entities;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using PayamakCore.Dto;
 using PayamakCore.Interface;
-using DidMark.Core.DTO.SMS;
-using DidMark.Core.Services.Interfaces;
-using DidMark.DataLayer.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace DidMark.Core.Services.Implementations
@@ -126,6 +127,19 @@ namespace DidMark.Core.Services.Implementations
 
             return false;
         }
+        public async Task<bool> SendOrderSummarySmsAsync(string phoneNumber, List<OrderBasketDetail> items, decimal totalPrice)
+        {
+            if (items == null || items.Count == 0) return false;
+
+            var message = "سبد خرید شما:\n";
+            foreach (var item in items)
+            {
+                message += $"{item.ProductName} x {item.Count} - {item.Price} تومان\n";
+            }
+            message += $"جمع کل: {totalPrice} تومان";
+
+            return await SendSmsAsync(phoneNumber, message);
+        }
 
 
         private async Task<MyMessageResponseDto> GetMyMessageList(DidMark.Core.DTO.SMS.MyMessageRequestDto requestDto, CancellationToken cancellationToken)
@@ -168,6 +182,7 @@ namespace DidMark.Core.Services.Implementations
                     return null;
                 }
             }
+
         }
 
     }

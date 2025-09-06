@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 
 namespace DidMark.WebApi.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
+
     public class ProductController : SiteBaseController
     {
         #region Fields
