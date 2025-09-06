@@ -2,8 +2,8 @@
 
 namespace DidMark.WebApi.Controllers
 {
-    [Route("[controller]")]
     [ApiController]
+    [Route("api/v1/[controller]")]
     public class SiteBaseController : ControllerBase
     {
 

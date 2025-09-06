@@ -8,9 +8,8 @@ using System.Threading.Tasks;
 
 namespace DidMark.WebApi.Controllers
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class OrderController : ControllerBase
+
+    public class OrderController : SiteBaseController
     {
         private readonly IOrderService _orderService;
 

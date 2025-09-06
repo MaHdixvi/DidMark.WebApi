@@ -1,0 +1,20 @@
+﻿@model DidMark.Core.DTO.Contact.ContactReplyEmailDTO
+
+<div style="text-align: center; padding: 20px; border: 1px solid gray; box-shadow: 0px 10px 5px gray; border-radius: 10px; font-family: Tahoma, sans-serif; max-width: 600px; margin: auto;">
+    <h2 style="color: #2E86C1;">پاسخ به پیام شما</h2>
+    <hr />
+    <p>
+        کاربر گرامی <strong>@Model.FullName</strong>،
+    </p>
+    <p>
+        پیام شما با عنوان <strong>@Model.Title</strong> دریافت شد و پاسخ زیر برای شما ارسال شده است:
+    </p>
+    <div style="margin: 15px 0; padding: 15px; border: 1px dashed #999; border-radius: 5px; background-color: #f9f9f9; text-align: left;">
+        @Model.ReplyMessage
+    </div>
+    <hr />
+    <p style="margin-top: 10px;">
+        با احترام،<br />
+        <strong>تیم پشتیبانی DidMark</strong>
+    </p>
+</div>
