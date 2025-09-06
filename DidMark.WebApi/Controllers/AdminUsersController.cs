@@ -28,7 +28,7 @@ namespace DidMark.WebApi.Controllers
         #endregion
 
         #region Get All Users
-        [HttpGet("get-all")]
+        [HttpGet("users/get-all")]
         [PermissionChecker("Admin")]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -38,7 +38,7 @@ namespace DidMark.WebApi.Controllers
         #endregion
 
         #region Get User By Id
-        [HttpGet("{id:long}")]
+        [HttpGet("users/{id:long}")]
         [PermissionChecker("Admin")]
         public async Task<IActionResult> GetUser(long id)
         {
@@ -51,7 +51,7 @@ namespace DidMark.WebApi.Controllers
         #endregion
 
         #region Update User
-        [HttpPut("update/{id:long}")]
+        [HttpPut("users/update/{id:long}")]
         [PermissionChecker("Admin")]
         public async Task<IActionResult> UpdateUser(long id, [FromBody] EditUserByAdminDTO dto)
         {
@@ -68,7 +68,7 @@ namespace DidMark.WebApi.Controllers
         #endregion
 
         #region Toggle User Status
-        [HttpPatch("toggle-status/{id:long}")]
+        [HttpPatch("users/toggle-status/{id:long}")]
         [PermissionChecker("Admin")]
         public async Task<IActionResult> ToggleStatus(long id)
         {
@@ -81,7 +81,7 @@ namespace DidMark.WebApi.Controllers
         #endregion
         #region Roles
 
-        [HttpGet("get-all")]
+        [HttpGet("roles/get-all")]
         [PermissionChecker("Admin")]
         public async Task<IActionResult> GetAllRoles()
         {
@@ -89,7 +89,7 @@ namespace DidMark.WebApi.Controllers
             return JsonResponseStatus.Success(roles);
         }
 
-        [HttpPost("assign")]
+        [HttpPost("user-roles/assign")]
         [PermissionChecker("Admin")]
         public async Task<IActionResult> AssignRole([FromBody] UserRoleAssignDTO dto)
         {
@@ -101,7 +101,7 @@ namespace DidMark.WebApi.Controllers
             return JsonResponseStatus.Success(new { message = "نقش به کاربر اختصاص یافت" });
         }
 
-        [HttpPost("remove")]
+        [HttpPost("user-roles/remove")]
         [PermissionChecker("Admin")]
         public async Task<IActionResult> RemoveRole([FromBody] UserRoleAssignDTO dto)
         {

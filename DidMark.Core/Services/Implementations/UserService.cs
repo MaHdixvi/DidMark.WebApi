@@ -35,6 +35,7 @@ namespace DidMark.Core.Services.Implementations
             _passwordHelper = passwordHelper ?? throw new ArgumentNullException(nameof(passwordHelper));
             _mailSender = mailSender ?? throw new ArgumentNullException(nameof(mailSender));
             _viewRenderService = viewRenderService ?? throw new ArgumentNullException(nameof(viewRenderService));
+
         }
 
         public async Task<List<User>> GetAllUsersAsync()
@@ -66,10 +67,29 @@ namespace DidMark.Core.Services.Implementations
             await _userRepository.AddEntity(user);
             await _userRepository.SaveChanges();
 
-            var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", user);
-            _mailSender.Send(user.Email, "Activate Your Account", body);
 
-            return RegisterUserResult.Success;
+            var roles = await _userRoleRepository.GetEntitiesQuery()
+                .Include(s => s.Role)
+                .Where(s => s.Role.RoleTitle == "User")
+                .Select(s => s.RoleId)
+                .ToListAsync();
+
+            if (roles.Any())
+            {
+                var userRoles = roles.Select(roleId => new UserRole
+                {
+                    UserId = user.Id,
+                    RoleId = roleId
+                }).ToList();
+
+                await _userRoleRepository.AddRange(userRoles);
+                await _userRoleRepository.SaveChanges();
+            }
+            var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", user);
+                _mailSender.Send(user.Email, "Activate Your Account", body);
+
+                return RegisterUserResult.Success;
+            
         }
 
         public async Task<bool> ExistsByEmailAsync(string email)
