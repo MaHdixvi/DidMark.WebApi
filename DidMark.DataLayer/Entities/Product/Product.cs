@@ -37,19 +37,19 @@ namespace DidMark.DataLayer.Entities.Product
         public string ShortDescription { get; set; }
 
 
-        [Display(Name = "رنگ")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string Color { get; set; }
+        //[Display(Name = "رنگ")]
+        //[Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        //[MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
+        //public string Color { get; set; }
 
-        [Display(Name = "کد")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public long Code { get; set; }
+        //[Display(Name = "کد")]
+        //[Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        //public long Code { get; set; }
 
-        [Display(Name = "سایز")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string Size { get; set; }
+        //[Display(Name = "سایز")]
+        //[Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        //[MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
+        //public string Size { get; set; }
 
         [Display(Name = "تعداد محصول")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
@@ -60,6 +60,34 @@ namespace DidMark.DataLayer.Entities.Product
 
         [Display(Name = "ویژه")]
         public bool IsSpecial { get; set; }
+        #region discount properties
+        [Display(Name = "درصد تخفیف")]
+        [Range(0, 100, ErrorMessage = "درصد تخفیف باید بین 0 تا 100 باشد")]
+        public int? DiscountPercent { get; set; }
+
+        [Display(Name = "تاریخ شروع تخفیف")]
+        public DateTime? DiscountStartDate { get; set; }
+
+        [Display(Name = "تاریخ پایان تخفیف")]
+        public DateTime? DiscountEndDate { get; set; }
+
+        [Display(Name = "قیمت نهایی بعد از تخفیف")]
+        public int FinalPrice
+        {
+            get
+            {
+                if (DiscountPercent.HasValue &&
+                    DiscountPercent.Value > 0 &&
+                    (!DiscountStartDate.HasValue || DiscountStartDate <= DateTime.Now) &&
+                    (!DiscountEndDate.HasValue || DiscountEndDate >= DateTime.Now))
+                {
+                    return Price - (Price * DiscountPercent.Value / 100);
+                }
+                return Price;
+            }
+        }
+        #endregion
+
         #endregion
 
         #region relations
@@ -67,6 +95,8 @@ namespace DidMark.DataLayer.Entities.Product
         public virtual ICollection<ProductVisit> ProductVisit { get; set; }
         public virtual ICollection<ProductSelectedCategories> ProductSelectedCategories { get; set; }
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
+        public virtual List<ProductAttribute> ProductAttributes { get; set; }
+
         #endregion
     }
 }

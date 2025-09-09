@@ -12,6 +12,7 @@ namespace DidMark.Core.Services.Interfaces
         Task<bool> SendRegistrationSmsAsync(string phoneNumber, string firstName, string lastName, string nationalCode, string collectionName, string userPhoneNumber);
         Task<bool> SendActivationCodeSmsAsync(string phoneNumber, string activationCode);
         Task<bool> SendActivatedAccountSmsAsync(string phoneNumber);
+        Task<bool> SendActivatedEmailSmsAsync(string phoneNumber);
         Task<bool> WaitForActivationAsync(string userName, DateTime dateTime);
         Task<bool> SendOrderSummarySmsAsync(string phoneNumber, List<OrderBasketDetail> items, decimal totalPrice);
 

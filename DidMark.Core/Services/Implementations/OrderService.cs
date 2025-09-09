@@ -1,4 +1,6 @@
-﻿using DidMark.Core.DTO.Orders;
+﻿using DidMark.Core.DTO.OffCodes;
+using DidMark.Core.DTO.Orders;
+using DidMark.Core.DTO.Products;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
 using DidMark.DataLayer.Entities.Orders;
@@ -14,6 +16,7 @@ namespace DidMark.Core.Services.Implementations
         private readonly IUserService _userService;
         private readonly IProductService _productService;
         private readonly ISmsService _smsService;
+        private readonly IOffCodeService _offCodeService;
         #endregion
 
         #region Constructor
@@ -22,13 +25,16 @@ namespace DidMark.Core.Services.Implementations
             IGenericRepository<OrderDetail> orderDetailRepository,
             IUserService userService,
             IProductService productService,
-            ISmsService smsService)
+            ISmsService smsService,
+            IOffCodeService offCodeService
+            )
         {
             _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
             _orderDetailRepository = orderDetailRepository ?? throw new ArgumentNullException(nameof(orderDetailRepository));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _productService = productService ?? throw new ArgumentNullException(nameof(productService));
             _smsService = smsService ?? throw new ArgumentNullException(nameof(smsService));
+            _offCodeService = offCodeService ?? throw new ArgumentNullException(nameof(offCodeService));
         }
         #endregion
 
@@ -46,21 +52,17 @@ namespace DidMark.Core.Services.Implementations
             await _orderRepository.AddEntity(order);
             await _orderRepository.SaveChanges();
 
-            // ارسال پیامک اطلاع‌رسانی ایجاد سفارش
-            var user = await _userService.GetUserByIdAsync(userId);
-            if (user != null)
-            {
-                await _smsService.SendActivatedAccountSmsAsync(user.PhoneNumber);
-            }
-
+            // تبدیل به DTO
             return order;
         }
+
 
         public async Task<Order> GetUserOpenOrderAsync(long userId)
         {
             var order = await _orderRepository.GetEntitiesQuery()
                 .Include(s => s.OrderDetails)
                 .ThenInclude(d => d.Product)
+                .ThenInclude(p => p.ProductSelectedCategories)
                 .Include(s => s.OffCode)
                 .SingleOrDefaultAsync(s => s.UserId == userId && !s.IsPay && !s.IsDelete);
 
@@ -69,8 +71,34 @@ namespace DidMark.Core.Services.Implementations
                 order = await CreateOrderUserAsync(userId);
             }
 
+            //return new OrderDto
+            //{
+            //    Id = order.Id,
+            //    IsPay = order.IsPay,
+            //    PaymentDate = order.PaymentDate,
+            //    TotalPrice = order.OrderDetails.Where(d => !d.IsDelete)
+            //                                   .Sum(d => d.Price * d.Count
+            //                                        * (order.OffCode != null && order.OffCode.ExpireDate >= DateTime.Now
+            //                                           && (order.OffCode.MaxUsageCount == null || order.OffCode.UsedCount < order.OffCode.MaxUsageCount)
+            //                                           ? (1 - order.OffCode.DiscountPercentage / 100) : 1)),
+            //    OffCode = order.OffCode == null ? null : new OffCodeResultDto
+            //    {
+            //        Code = order.OffCode.Code,
+            //        DiscountPercentage = order.OffCode.DiscountPercentage,
+            //        ExpireDate = order.OffCode.ExpireDate
+            //    },
+            //    OrderDetails = order.OrderDetails.Where(d => !d.IsDelete).Select(d => new OrderDetailsDto
+            //    {
+            //        Id = d.Id,
+            //        ProductName = d.Product.ProductName,
+            //        Count = d.Count,
+            //        Price = d.Price,
+            //        ImageName = PathTools.Domain + PathTools.ProductImagePath + d.Product.ImageName
+            //    }).ToList()
+            //};
             return order;
         }
+
 
         public async Task<decimal> CalculateOrderTotalPriceAsync(long orderId)
         {
@@ -87,10 +115,14 @@ namespace DidMark.Core.Services.Implementations
             {
                 subtotal += detail.Price * detail.Count;
             }
-
-            if (order.OffCode != null && order.OffCode.ExpireDate >= DateTime.Now)
+            if (order.OffCode != null)
             {
-                subtotal -= subtotal * (order.OffCode.DiscountPercentage / 100);
+                // بررسی محدودیت تاریخ و استفاده
+                if (order.OffCode.ExpireDate >= DateTime.Now &&
+                    (order.OffCode.MaxUsageCount == null || order.OffCode.UsedCount < order.OffCode.MaxUsageCount))
+                {
+                    subtotal -= subtotal * (order.OffCode.DiscountPercentage / 100);
+                }
             }
 
             return subtotal;
@@ -105,6 +137,13 @@ namespace DidMark.Core.Services.Implementations
 
             if (user == null || product == null) return;
 
+            // بررسی اینکه موجودی کافی وجود داشته باشه
+            if (product.NumberofProduct < count)
+            {
+                // می‌تونی اینجا Exception بزنی یا return کنی
+                throw new InvalidOperationException("موجودی محصول کافی نیست");
+            }
+
             var order = await GetUserOpenOrderAsync(userId);
             if (count > 1) count = 1;
 
@@ -113,6 +152,9 @@ namespace DidMark.Core.Services.Implementations
 
             if (detail != null)
             {
+                // دوباره هم باید چک کنیم موجودی کافی باشه
+                if (product.NumberofProduct < detail.Count + count)
+                    throw new InvalidOperationException("موجودی محصول کافی نیست");
                 detail.Count += count;
                 _orderDetailRepository.UpdateEntity(detail);
             }
@@ -123,10 +165,25 @@ namespace DidMark.Core.Services.Implementations
                     OrderId = order.Id,
                     ProductId = productId,
                     Count = count,
-                    Price = (int)product.Price
+                    Price = (int)product.FinalPrice
                 };
                 await _orderDetailRepository.AddEntity(newDetail);
             }
+
+            // کم کردن موجودی محصول
+            product.NumberofProduct -= count;
+            await _productService.UpdateProduct(new EditProductDTO
+            {
+                Id = product.Id,
+                ProductName = product.ProductName,
+                Price = product.Price,
+                Description = product.Description,
+                ShortDescription = product.ShortDescription,
+                NumberofProduct = product.NumberofProduct,
+                IsExists = product.IsExists,
+                IsSpecial = product.IsSpecial,
+                CurrentImage = product.ImageName // اگر نیاز بود
+            });
 
             await _orderDetailRepository.SaveChanges();
 
@@ -136,13 +193,23 @@ namespace DidMark.Core.Services.Implementations
             await _smsService.SendOrderSummarySmsAsync(user.PhoneNumber, basketDetails, totalPrice);
         }
 
-        public async Task<List<OrderDetail>> GetOrderDetailsAsync(long orderId)
+        public async Task<List<OrderDetailsDto>> GetOrderDetailsAsync(long orderId)
         {
-            return await _orderDetailRepository.GetEntitiesQuery()
+            var details = await _orderDetailRepository.GetEntitiesQuery()
                 .Include(d => d.Product)
                 .Where(d => d.OrderId == orderId && !d.IsDelete)
                 .ToListAsync();
+
+            return details.Select(d => new OrderDetailsDto
+            {
+                Id = d.Id,
+                ProductName = d.Product.ProductName,
+                Count = d.Count,
+                Price = d.Price,
+                ImageName = PathTools.Domain + PathTools.ProductImagePath + d.Product.ImageName
+            }).ToList();
         }
+
 
         public async Task<List<OrderBasketDetail>> GetUserBasketDetailsAsync(long userId)
         {
@@ -178,6 +245,62 @@ namespace DidMark.Core.Services.Implementations
                 await _orderDetailRepository.SaveChanges();
             }
         }
+        #endregion
+
+
+        #region OffCode
+        //public async Task<bool> ApplyOffCodeAsync(long userId, string code)
+        //{
+        //    var order = await GetUserOpenOrderAsync(userId);
+        //    if (order == null) return false;
+
+        //    // بررسی اعتبار کد تخفیف
+        //    var offCode = await _offCodeService.GetActiveOffCodeByCodeAsync(code);
+        //    if (offCode == null) return false;
+
+        //    // ست کردن کد تخفیف روی سفارش
+        //    order.OffCodeId = offCode.Id;
+        //    _orderRepository.UpdateEntity(order);
+        //    await _orderRepository.SaveChanges();
+
+        //    return true;
+        //}
+        public async Task<bool> ApplyOffCodeAsync(long userId, string code)
+        {
+            var order = await GetUserOpenOrderAsync(userId);
+            if (order == null) return false;
+
+            // بررسی اعتبار کد تخفیف با توجه به userId و محصولات سفارش
+            OffCodeResultDto? appliedCode = null;
+            foreach (var detail in order.OrderDetails.Where(d => !d.IsDelete))
+            {
+                appliedCode = await _offCodeService.GetActiveOffCodeByCodeAsync(
+                    code,
+                    userId,
+                    productId: detail.ProductId,
+                    categoryId: detail.Product.ProductSelectedCategories.FirstOrDefault()?.ProductCategoriesId
+                );
+
+                if (appliedCode == null)
+                    return false; // یکی از محصولات اجازه استفاده از کد را ندارد
+            }
+
+            // ست کردن کد تخفیف روی سفارش
+            order.OffCodeId = appliedCode.Id;
+            _orderRepository.UpdateEntity(order);
+            await _orderRepository.SaveChanges();
+
+            return true;
+        }
+
+        public async Task IncreaseOffCodeUsageAsync(long orderId, long userId)
+        {
+            var order = await _orderRepository.GetEntityById(orderId);
+            if (order == null || order.OffCodeId == null) return;
+
+            await _offCodeService.IncreaseUsageAsync(order.OffCodeId.Value, userId);
+        }
+
         #endregion
 
         #region Dispose

@@ -30,10 +30,9 @@ namespace DidMark.Core.Services.Implementations
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim("firstName", user.FirstName ?? string.Empty),
-                new Claim("lastName", user.LastName ?? string.Empty),
-                new Claim("phoneNumber", user.PhoneNumber ?? string.Empty)
+                new Claim("phoneNumber", user.PhoneNumber ?? string.Empty),
+                new Claim("username", user.Username ?? string.Empty),
+                new Claim("isActive", user.IsActivated.ToString()),
             };
 
             var tokenOptions = new JwtSecurityToken(

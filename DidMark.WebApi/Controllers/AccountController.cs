@@ -6,6 +6,7 @@ using DidMark.Core.Utilities.Enums;
 using DidMark.Core.Utilities.Extensions.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace DidMark.WebApi.Controllers
 {
@@ -44,45 +45,42 @@ namespace DidMark.WebApi.Controllers
         public async Task<IActionResult> Login([FromBody] LoginUserDTO login)
         {
             if (!ModelState.IsValid)
-            {
                 return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
-            }
 
             var result = await _userService.LoginUserAsync(login);
+            if (result == LoginUserResult.IncorrectData)
+                return JsonResponseStatus.Unauthorized(new { message = "ایمیل یا رمز عبور اشتباه است" });
 
-            switch (result)
+            if (result == LoginUserResult.NotActivated)
+                return JsonResponseStatus.Forbidden(new { message = "حساب کاربری شما فعال نشده است" });
+
+            if (result == LoginUserResult.Success)
             {
-                case LoginUserResult.IncorrectData:
-                    return JsonResponseStatus.Unauthorized(new { message = "ایمیل یا رمز عبور اشتباه است" });
+                var user = !login.PhoneNumber.IsNullOrEmpty()
+                    ? await _userService.GetUserByPhoneNumberAsync(login.PhoneNumber)
+                    : await _userService.GetUserByUsernameAsync(login.Username);
 
-                case LoginUserResult.NotActivated:
-                    return JsonResponseStatus.Forbidden(new { message = "حساب کاربری شما فعال نشده است" });
+                if (user == null)
+                    return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
 
-                case LoginUserResult.Success:
-                    var user = await _userService.GetUserByEmailAsync(login.Email);
-                    if (user == null)
+                var token = _jwtTokenService.GenerateJwtToken(user);
+                return JsonResponseStatus.Success(new
+                {
+                    token,
+                    userInfo = new
                     {
-                        return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
+                        user.Id,
+                        user.FirstName,
+                        user.LastName,
+                        user.Email,
+                        user.PhoneNumber
                     }
-
-                    var token = _jwtTokenService.GenerateJwtToken(user);
-                    return JsonResponseStatus.Success(new
-                    {
-                        token,
-                        userInfo = new
-                        {
-                            user.Id,
-                            user.FirstName,
-                            user.LastName,
-                            user.Email,
-                            user.PhoneNumber
-                        }
-                    });
-
-                default:
-                    return JsonResponseStatus.Error(new { message = "خطای ناشناخته در ورود" });
+                });
             }
+
+            return JsonResponseStatus.Error(new { message = "خطای ناشناخته در ورود" });
         }
+
 
         [HttpGet("check-auth")]
         public async Task<IActionResult> CheckUserAuth()
@@ -139,8 +137,9 @@ namespace DidMark.WebApi.Controllers
                 return JsonResponseStatus.Unauthorized(new { message = "کاربر احراز هویت نشده است" });
             }
 
-            await HttpContext.SignOutAsync();
+            //await HttpContext.SignOutAsync();
             return JsonResponseStatus.Success(new { message = "خروج با موفقیت انجام شد" });
+            //سمت فرانت اند انجام می شود
         }
 
         [HttpPut("profile")]
@@ -159,9 +158,12 @@ namespace DidMark.WebApi.Controllers
             var userId = User.GetUserId();
             var updateResult = await _userService.UpdateUserAsync(editUser, userId);
 
-            return updateResult
-                ? JsonResponseStatus.Success(new { message = "اطلاعات کاربر با موفقیت ویرایش شد" })
-                : JsonResponseStatus.Error(new { message = "خطا در ویرایش اطلاعات کاربر" });
+            return updateResult switch
+            {
+                EditUserResult.Success => JsonResponseStatus.Success(new {message = "اطلاعات کاربر با موفقیت ویرایش شد" }),
+                EditUserResult.EmailExists => JsonResponseStatus.BadRequest(new { message = "ایمیل تکراری است "}),
+                _ => JsonResponseStatus.Error(new { message = "خطا در ویرایش اطلاعات کاربر" })
+            };
         }
 
         [HttpPost("change-password")]
@@ -185,9 +187,60 @@ namespace DidMark.WebApi.Controllers
                 ChangePasswordResult.Success => JsonResponseStatus.Success(new { message = "رمز عبور با موفقیت تغییر یافت" }),
                 ChangePasswordResult.IncorrectCurrentPassword => JsonResponseStatus.BadRequest(new { message = "رمز عبور فعلی اشتباه است" }),
                 ChangePasswordResult.SameAsOldPassword => JsonResponseStatus.BadRequest(new { message = "رمز عبور جدید نباید با رمز قبلی یکسان باشد" }),
+                ChangePasswordResult.NotSameNewPasswordAndConfirmPassword => JsonResponseStatus.BadRequest(new { message = "رمز عبور جدید و تکرارش باید یکسان باشند" }),
                 ChangePasswordResult.UserNotFound => JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" }),
                 _ => JsonResponseStatus.Error(new { message = "خطا در تغییر رمز عبور" })
             };
         }
+        [HttpPost("activate-email")]
+        public async Task<IActionResult> ActivateEmail(string activationCode)
+        {
+            if (string.IsNullOrEmpty(activationCode))
+            {
+                return JsonResponseStatus.BadRequest(new { message = "کد فعال‌سازی نامعتبر است" });
+            }
+
+            var user = await _userService.GetUserByEmailActivationCodeAsync(activationCode);
+            if (user == null)
+            {
+                return JsonResponseStatus.NotFound(new { message = "کد فعال‌سازی نامعتبر یا منقضی شده است" });
+            }
+
+            var activationResult = await _userService.ActivateUserEmailAsync(user);
+            return activationResult
+                ? JsonResponseStatus.Success(new { message = "ایمیل با موفقیت فعال شد" })
+                : JsonResponseStatus.Error(new { message = "خطا در فعال‌سازی ایمیل" });
+        }
+
+        [HttpPost("send-email-activation")]
+        public async Task<IActionResult> SendEmailActivation([FromBody] SendEmailActivationSmsDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
+            }
+
+            var result = await _userService.SendEmailActivationSmsAsync(dto);
+
+            return result
+                ? JsonResponseStatus.Success(new { message = "کد فعال‌سازی به ایمیل ارسال شد" })
+                : JsonResponseStatus.Error(new { message = "خطا در ارسال کد فعال‌سازی ایمیل" });
+        }
+
+        [HttpPost("send-phone-activation")]
+        public async Task<IActionResult> SendPhoneActivation([FromBody] SendPhoneNumberActivationSmsDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
+            }
+
+            var result = await _userService.SendPhoneNumberActivationSmsAsync(dto);
+
+            return result
+                ? JsonResponseStatus.Success(new { message = "کد فعال‌سازی به شماره تلفن ارسال شد" })
+                : JsonResponseStatus.Error(new { message = "خطا در ارسال کد فعال‌سازی شماره تلفن" });
+        }
+
     }
 }

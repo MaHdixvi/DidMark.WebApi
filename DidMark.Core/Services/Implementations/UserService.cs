@@ -6,8 +6,11 @@ using DidMark.Core.Utilities.Convertors;
 using DidMark.Core.Utilities.Enums;
 using DidMark.DataLayer.Entities.Access;
 using DidMark.DataLayer.Entities.Account;
+using DidMark.DataLayer.Entities.Orders;
 using DidMark.DataLayer.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -21,6 +24,7 @@ namespace DidMark.Core.Services.Implementations
         private readonly IPasswordHelper _passwordHelper;
         private readonly IMailSender _mailSender;
         private readonly IViewRenderService _viewRenderService;
+        private readonly ISmsService _smsService;
         private bool _disposed;
 
         public UserService(
@@ -28,6 +32,7 @@ namespace DidMark.Core.Services.Implementations
             IGenericRepository<UserRole> userRoleRepository,
             IPasswordHelper passwordHelper,
             IMailSender mailSender,
+                        ISmsService smsService,
             IViewRenderService viewRenderService)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
@@ -35,6 +40,7 @@ namespace DidMark.Core.Services.Implementations
             _passwordHelper = passwordHelper ?? throw new ArgumentNullException(nameof(passwordHelper));
             _mailSender = mailSender ?? throw new ArgumentNullException(nameof(mailSender));
             _viewRenderService = viewRenderService ?? throw new ArgumentNullException(nameof(viewRenderService));
+            _smsService = smsService ?? throw new ArgumentNullException(nameof(smsService));
 
         }
 
@@ -45,21 +51,16 @@ namespace DidMark.Core.Services.Implementations
 
         public async Task<RegisterUserResult> RegisterUserAsync(RegisterUserDTO register)
         {
-            if (await ExistsByEmailAsync(register.Email))
-                return RegisterUserResult.EmailExists;
-
             if (await ExistsByPhoneNumberAsync(register.PhoneNumber))
                 return RegisterUserResult.PhoneNumberExists;
+            if (await ExistsByUsernameAsync(register.Username))
+                return RegisterUserResult.UsernameExists;
 
             var user = new User
             {
-                Email = register.Email.SanitizeText(),
-                FirstName = register.FirstName.SanitizeText(),
-                LastName = register.LastName.SanitizeText(),
+                PhoneNumber = register.PhoneNumber.SanitizeText(),
                 EmailActiveCode = Guid.NewGuid().ToString(),
                 Password = _passwordHelper.EncodePasswordMd5(register.Password),
-                NationalCode = register.NationalCode.SanitizeText(),
-                PhoneNumber = register.PhoneNumber.SanitizeText(),
                 PhoneActiveCode = Guid.NewGuid().ToString(),
                 Username = register.Username.SanitizeText(),
             };
@@ -85,10 +86,10 @@ namespace DidMark.Core.Services.Implementations
                 await _userRoleRepository.AddRange(userRoles);
                 await _userRoleRepository.SaveChanges();
             }
-            var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", user);
-                _mailSender.Send(user.Email, "Activate Your Account", body);
-
-                return RegisterUserResult.Success;
+            //var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", user);
+            //_mailSender.Send(user.Email, "Activate Your Account", body);
+            _smsService.SendActivationCodeSmsAsync(user.PhoneNumber, user.PhoneActiveCode);
+            return RegisterUserResult.Success;
             
         }
 
@@ -104,17 +105,29 @@ namespace DidMark.Core.Services.Implementations
                 .AnyAsync(s => s.PhoneNumber == phoneNumber.ToLower().Trim());
         }
 
+        public async Task<bool> ExistsByUsernameAsync(string username)
+        {
+            return await _userRepository.GetEntitiesQuery()
+                .AnyAsync(s => s.Username == username.ToLower().Trim());
+        }
+
         public async Task<LoginUserResult> LoginUserAsync(LoginUserDTO login, bool checkAdminRole = false)
         {
+            if (login.Username.IsNullOrEmpty()&&login.PhoneNumber.IsNullOrEmpty())
+            {
+                return LoginUserResult.IncorrectData;
+            }
             var password = _passwordHelper.EncodePasswordMd5(login.Password);
-            var user = await _userRepository.GetEntitiesQuery()
-                .SingleOrDefaultAsync(s => s.Email == login.Email.ToLower().Trim() && s.Password == password);
+
+var user = await _userRepository.GetEntitiesQuery()
+    .FirstOrDefaultAsync(s =>
+        ((login.PhoneNumber != null && s.PhoneNumber == login.PhoneNumber) ||
+        (login.Username != null && s.Username == login.Username)) &&
+        s.Password == password);
 
             if (user == null)
                 return LoginUserResult.IncorrectData;
 
-            if (!user.IsActivated)
-                return LoginUserResult.NotActivated;
 
             if (checkAdminRole && !await IsAdminAsync(user.Id))
                 return LoginUserResult.NotAdmin;
@@ -125,7 +138,17 @@ namespace DidMark.Core.Services.Implementations
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _userRepository.GetEntitiesQuery()
-                .SingleOrDefaultAsync(s => s.Email == email.ToLower().Trim());
+                .SingleOrDefaultAsync(s => s.Email.ToLower().Trim() == email.ToLower().Trim());
+        }
+        public async Task<User?> GetUserByPhoneNumberAsync(string phoneNumber)
+        {
+            return await _userRepository.GetEntitiesQuery()
+                .SingleOrDefaultAsync(s => s.PhoneNumber.ToLower().Trim() == phoneNumber.ToLower().Trim());
+        }
+        public async Task<User?> GetUserByUsernameAsync(string username)
+        {
+            return await _userRepository.GetEntitiesQuery()
+                .SingleOrDefaultAsync(s => s.Username.ToLower().Trim() == username.ToLower().Trim());
         }
 
         public async Task<User?> GetUserByIdAsync(long userId)
@@ -139,23 +162,43 @@ namespace DidMark.Core.Services.Implementations
                 return false;
 
             user.IsActivated = true;
-            user.EmailActiveCode = Guid.NewGuid().ToString();
+            user.PhoneActiveCode = Guid.NewGuid().ToString();
+            user.IsPhoneActivated = true;
             _userRepository.UpdateEntity(user);
             await _userRepository.SaveChanges();
+            await _smsService.SendActivatedAccountSmsAsync(user.PhoneNumber);
+            return true;
+        }
+        public async Task<bool> ActivateUserEmailAsync(User user)
+        {
+            if (user == null)
+                return false;
+
+            user.EmailActiveCode = Guid.NewGuid().ToString();
+            user.IsEmailActivated = true;
+            _userRepository.UpdateEntity(user);
+            await _userRepository.SaveChanges();
+            await _smsService.SendActivatedEmailSmsAsync(user.PhoneNumber);
             return true;
         }
 
         public async Task<User?> GetUserByActivationCodeAsync(string activationCode)
         {
             return await _userRepository.GetEntitiesQuery()
-                .SingleOrDefaultAsync(s => s.EmailActiveCode == activationCode);
+                .SingleOrDefaultAsync(s => s.PhoneActiveCode == activationCode);
         }
 
-        public async Task<bool> UpdateUserAsync(EditUserDTO user, long userId)
+        public async Task<User?> GetUserByEmailActivationCodeAsync(string activationCode)
+        {
+            return await _userRepository.GetEntitiesQuery()
+                .SingleOrDefaultAsync(s => s.Email == activationCode);
+        }
+
+        public async Task<EditUserResult> UpdateUserAsync(EditUserDTO user, long userId)
         {
             var existingUser = await _userRepository.GetEntityById(userId);
             if (existingUser == null)
-                return false;
+                return EditUserResult.Error;
 
             if (!string.IsNullOrWhiteSpace(user.FirstName))
                 existingUser.FirstName = user.FirstName.SanitizeText();
@@ -171,11 +214,30 @@ namespace DidMark.Core.Services.Implementations
 
             if (!string.IsNullOrWhiteSpace(user.Province))
                 existingUser.Province = user.Province.SanitizeText();
+            if (!string.IsNullOrWhiteSpace(user.Email)) {
 
+                if (await ExistsByEmailAsync(user.Email))
+                    return EditUserResult.EmailExists;
+                if (string.IsNullOrEmpty(existingUser.Email))
+                {
 
+                    existingUser.Email = user.Email.SanitizeText();
+                    existingUser.IsEmailActivated = false;
+                    var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", existingUser);
+                    _mailSender.Send(user.Email, "Activate Your Account", body);
+                }
+                else 
+                if (existingUser.Email.ToLower().Trim()!=user.Email.ToLower().Trim())
+                {
+                    existingUser.Email = user.Email.SanitizeText();
+                    existingUser.IsEmailActivated = false;
+                    var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", existingUser);
+                    _mailSender.Send(user.Email, "Activate Your Account", body);
+                }
+            }
             _userRepository.UpdateEntity(existingUser);
             await _userRepository.SaveChanges();
-            return true;
+            return EditUserResult.Success;
         }
 
         public async Task<bool> IsAdminAsync(long userId)
@@ -199,6 +261,9 @@ namespace DidMark.Core.Services.Implementations
             if (user.Password == newPasswordHash)
                 return ChangePasswordResult.SameAsOldPassword;
 
+            if (changePassword.NewPassword != changePassword.ConfirmPassword)
+                return ChangePasswordResult.NotSameNewPasswordAndConfirmPassword;
+
             user.Password = newPasswordHash;
             _userRepository.UpdateEntity(user);
             await _userRepository.SaveChanges();
@@ -214,11 +279,11 @@ namespace DidMark.Core.Services.Implementations
             await _userRepository.SaveChanges();
             return true;
         }
-        public async Task<bool> UpdateUserByAdminAsync(EditUserByAdminDTO dto)
+        public async Task<EditUserByAdminResult> UpdateUserByAdminAsync(EditUserByAdminDTO dto)
         {
             var existingUser = await _userRepository.GetEntityById(dto.Id);
             if (existingUser == null)
-                return false;
+                return EditUserByAdminResult.Error;
 
             if (!string.IsNullOrWhiteSpace(dto.FirstName))
                 existingUser.FirstName = dto.FirstName.SanitizeText();
@@ -226,17 +291,11 @@ namespace DidMark.Core.Services.Implementations
             if (!string.IsNullOrWhiteSpace(dto.LastName))
                 existingUser.LastName = dto.LastName.SanitizeText();
 
-            if (!string.IsNullOrWhiteSpace(dto.Username))
-                existingUser.Username = dto.Username.SanitizeText();
+            //if (!string.IsNullOrWhiteSpace(dto.Username))
+            //    existingUser.Username = dto.Username.SanitizeText();
 
-            if (!string.IsNullOrWhiteSpace(dto.Email))
-                existingUser.Email = dto.Email.SanitizeText();
-
-            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
-                existingUser.PhoneNumber = dto.PhoneNumber.SanitizeText();
-
-            if (!string.IsNullOrWhiteSpace(dto.NationalCode))
-                existingUser.NationalCode = dto.NationalCode.SanitizeText();
+            //if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+            //    existingUser.PhoneNumber = dto.PhoneNumber.SanitizeText();
 
             if (!string.IsNullOrWhiteSpace(dto.City))
                 existingUser.City = dto.City.SanitizeText();
@@ -246,12 +305,56 @@ namespace DidMark.Core.Services.Implementations
 
             if (!string.IsNullOrWhiteSpace(dto.Address))
                 existingUser.Address = dto.Address.SanitizeText();
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+            {
+
+                if (await ExistsByUsernameAsync(dto.Email))
+                    return EditUserByAdminResult.EmailExists;
+                if (!string.IsNullOrEmpty(existingUser.Email))
+                {
+
+                    existingUser.Email = dto.Email.SanitizeText();
+                    existingUser.IsEmailActivated = false;
+                    var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", dto);
+                    _mailSender.Send(dto.Email, "Activate Your Account", body);
+                }
+                else
+                if (existingUser.Email.ToLower().Trim() != dto.Email.ToLower().Trim())
+                {
+                    existingUser.Email = dto.Email.SanitizeText();
+                    existingUser.IsEmailActivated = false;
+                    var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", dto);
+                    _mailSender.Send(dto.Email, "Activate Your Account", body);
+                }
+            }
 
             _userRepository.UpdateEntity(existingUser);
             await _userRepository.SaveChanges();
+            return EditUserByAdminResult.Success;
+        }
+
+
+        public async Task<bool> SendEmailActivationSmsAsync(SendEmailActivationSmsDto dto)
+        {
+            if (dto.Email == null)
+                return false;
+            var user = await GetUserByEmailAsync(dto.Email);
+            var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", user);
+            _mailSender.Send(dto.Email, "Activate Your Account", body);
             return true;
         }
 
+        public async Task<bool> SendPhoneNumberActivationSmsAsync(SendPhoneNumberActivationSmsDto dto)
+        {
+            if (dto.PhoneNumber == null)
+                return false;
+
+            var user = await GetUserByPhoneNumberAsync(dto.PhoneNumber);
+
+            _smsService.SendActivationCodeSmsAsync(dto.PhoneNumber, "https://localhost:4200/ActivateAccount/" + user.PhoneActiveCode);
+
+            return true;
+        }
 
         public void Dispose()
         {

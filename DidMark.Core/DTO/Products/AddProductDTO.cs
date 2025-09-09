@@ -34,32 +34,40 @@ namespace DidMark.Core.DTO.Products
         public string ShortDescription { get; set; }
 
 
-        [Display(Name = "رنگ")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public required string Color { get; set; }
+        //[Display(Name = "رنگ")]
+        //[Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        //[MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
+        //public required string Color { get; set; }
 
-        [Display(Name = "کد")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public long Code { get; set; }
+        //[Display(Name = "کد")]
+        //[Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        //public long Code { get; set; }
 
-        [Display(Name = "سایز")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string Size { get; set; }
+        //[Display(Name = "سایز")]
+        //[Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        //[MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
+        //public string Size { get; set; }
 
         [Display(Name = "تعداد محصول")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         public int NumberofProduct { get; set; }
 
         [Display(Name = "موجود/به اتمام رسیده")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-
         public bool IsExists { get; set; }
 
         [Display(Name = "ویژه")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-
         public bool IsSpecial { get; set; }
+        public List<CreateProductAttributeDto> Attributes { get; set; } = new();
+        // 🔹 تخفیف
+        // 🔹 تخفیف (اختیاری)
+        [Display(Name = "درصد تخفیف")]
+        public int? DiscountPercent { get; set; }
+
+        [Display(Name = "تاریخ شروع تخفیف")]
+        public DateTime? DiscountStartDate { get; set; }
+
+        [Display(Name = "تاریخ پایان تخفیف")]
+        public DateTime? DiscountEndDate { get; set; }
+
     }
 }

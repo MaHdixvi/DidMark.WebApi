@@ -84,6 +84,8 @@ builder.Services.AddScoped<IViewRenderService, RenderViewToString>();
 builder.Services.AddScoped<IContactUs, ContactUsService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAccessService, AccessService>();
+builder.Services.AddScoped<IOffCodeService, OffCodeService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMvc();

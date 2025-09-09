@@ -94,7 +94,7 @@ namespace DidMark.WebApi.Controllers
             return JsonResponseStatus.Success(relatedProducts);
         }
         #endregion
-        #region
+        #region Category
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAll()
         {
@@ -135,7 +135,50 @@ namespace DidMark.WebApi.Controllers
             return JsonResponseStatus.Success(categories);
         }
 
+        [HttpGet("{categoryId}/attributes")]
+        public async Task<IActionResult> GetCategoryAttributes(int categoryId)
+        {
+            var attributes = await _categoryService.GetCategoryAttributesAsync(categoryId);
+            return Ok(attributes);
+        }
+
 
         #endregion
+
+        // اضافه کردن بازدید برای یک محصول
+        [HttpPost("AddVisit")]
+        public async Task<IActionResult> AddVisit(long productId)
+        {
+            try
+            {
+                // گرفتن IP کاربر
+                var userIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
+
+                await _productService.AddProductVisit(productId, userIp);
+                return Ok(new { Success = true, Message = "بازدید ثبت شد" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Success = false, Message = ex.Message });
+            }
+        }
+
+        // گرفتن همه بازدیدهای یک محصول
+        [HttpGet("{productId}/Visits")]
+        public async Task<ActionResult<List<ProductVisitDto>>> GetVisits(long productId)
+        {
+            try
+            {
+                var visits = await _productService.GetProductVisits(productId);
+                if (visits == null || visits.Count == 0)
+                    return NotFound(new { Success = false, Message = "بازدیدی یافت نشد" });
+
+                return Ok(visits);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Success = false, Message = ex.Message });
+            }
+        }
     }
 }

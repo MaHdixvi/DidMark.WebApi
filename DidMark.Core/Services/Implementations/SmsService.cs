@@ -53,6 +53,11 @@ namespace DidMark.Core.Services.Implementations
             var message = $"کاربر گرامی ثبت نام شما تایید شد";
             return await SendSmsAsync(phoneNumber, message);
         }
+        public async Task<bool> SendActivatedEmailSmsAsync(string phoneNumber)
+        {
+            var message = $"کاربر گرامی ایمیل شما تایید شد";
+            return await SendSmsAsync(phoneNumber, message);
+        }
 
         private async Task<bool> SendSmsAsync(string to, string message)
         {

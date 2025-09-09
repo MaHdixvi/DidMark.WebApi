@@ -16,9 +16,15 @@ namespace DidMark.Core.Services.Interfaces
 
         #region Order Detail
         Task AddProductToOrderAsync(long userId, long productId, int count);
-        Task<List<OrderDetail>> GetOrderDetailsAsync(long orderId);
+        Task<List<OrderDetailsDto>> GetOrderDetailsAsync(long orderId);
         Task<List<OrderBasketDetail>> GetUserBasketDetailsAsync(long userId);
         Task DeleteOrderDetailsAsync(long detailId);
+        #endregion
+
+        #region OffCode
+        Task<bool> ApplyOffCodeAsync(long userId, string code);
+        Task IncreaseOffCodeUsageAsync(long orderId, long userId);
+
         #endregion
     }
 }

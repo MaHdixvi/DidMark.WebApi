@@ -1,5 +1,6 @@
 ﻿using DidMark.Core.DTO.Paging;
 using DidMark.Core.DTO.Products;
+using DidMark.Core.DTO.Products.ProductCategory;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Extensions.FileExtentions;
 using DidMark.Core.Utilities.Extensions.Paging;
@@ -19,6 +20,7 @@ namespace DidMark.Core.Services.Implementations
     public class ProductService : IProductService
     {
         private readonly IGenericRepository<Product> productRepository;
+        private readonly IGenericRepository<ProductAttribute> productAttributeRepository;
         private readonly IGenericRepository<ProductCategories> productCategoriesRepository;
         private readonly IGenericRepository<ProductGalleries> productGalleriesRepository;
         private readonly IGenericRepository<ProductVisit> productVisitrepository;
@@ -27,12 +29,14 @@ namespace DidMark.Core.Services.Implementations
 
         public ProductService(
             IGenericRepository<Product> productRepository,
+            IGenericRepository<ProductAttribute> productAttributeRepository,
             IGenericRepository<ProductCategories> productCategoriesRepository,
             IGenericRepository<ProductGalleries> productGalleriesRepository,
             IGenericRepository<ProductVisit> productVisitrepository,
             IGenericRepository<ProductSelectedCategories> productSelectedCategoriesRepository)
         {
             this.productRepository = productRepository;
+            this.productAttributeRepository = productAttributeRepository;
             this.productCategoriesRepository = productCategoriesRepository;
             this.productGalleriesRepository = productGalleriesRepository;
             this.productVisitrepository = productVisitrepository;
@@ -54,9 +58,9 @@ namespace DidMark.Core.Services.Implementations
             {
                 ProductName = productDto.ProductName,
                 Description = productDto.Description,
-                Color = productDto.Color,
-                Size = productDto.Size,
-                Code = productDto.Code,
+                //Color = productDto.Color,
+                //Size = productDto.Size,
+                //Code = productDto.Code,
                 NumberofProduct = productDto.NumberofProduct,
                 Price = productDto.Price,
                 ShortDescription = productDto.ShortDescription,
@@ -64,11 +68,28 @@ namespace DidMark.Core.Services.Implementations
                 IsSpecial = productDto.IsSpecial,
                 ImageName = imageName,
                 CreateDate = DateTime.Now,
-                IsDelete = false
+                IsDelete = false,
+                // 🔹 تخفیف
+                DiscountPercent = productDto.DiscountPercent,
+                DiscountStartDate = productDto.DiscountStartDate,
+                DiscountEndDate = productDto.DiscountEndDate
             };
 
             await productRepository.AddEntity(product);
             await productRepository.SaveChanges();
+
+            if (productDto.Attributes != null && productDto.Attributes.Any())
+            {
+                var productAttributes = productDto.Attributes.Select(a => new ProductAttribute
+                {
+                    ProductId = product.Id,
+                    PAttributeId = a.AttributeId,
+                    Value = a.Value
+                }).ToList();
+
+                await productAttributeRepository.AddRange(productAttributes);
+                await productAttributeRepository.SaveChanges();
+            }
         }
 
         public async Task UpdateProduct(EditProductDTO productDto)
@@ -79,9 +100,9 @@ namespace DidMark.Core.Services.Implementations
             if (!string.IsNullOrEmpty(productDto.ProductName)) product.ProductName = productDto.ProductName;
             if (!string.IsNullOrEmpty(productDto.Description)) product.Description = productDto.Description;
             if (!string.IsNullOrEmpty(productDto.ShortDescription)) product.ShortDescription = productDto.ShortDescription;
-            if (!string.IsNullOrEmpty(productDto.Color)) product.Color = productDto.Color;
-            if (!string.IsNullOrEmpty(productDto.Size)) product.Size = productDto.Size;
-            if (productDto.Code.HasValue) product.Code = productDto.Code.Value;
+            //if (!string.IsNullOrEmpty(productDto.Color)) product.Color = productDto.Color;
+            //if (!string.IsNullOrEmpty(productDto.Size)) product.Size = productDto.Size;
+            //if (productDto.Code.HasValue) product.Code = productDto.Code.Value;
             if (productDto.NumberofProduct.HasValue) product.NumberofProduct = productDto.NumberofProduct.Value;
             if (productDto.Price.HasValue) product.Price = productDto.Price.Value;
 
@@ -93,6 +114,14 @@ namespace DidMark.Core.Services.Implementations
             {
                 product.IsSpecial = productDto.IsSpecial.Value;
             }
+            if (productDto.DiscountPercent.HasValue)
+                product.DiscountPercent = productDto.DiscountPercent.Value;
+
+            if (productDto.DiscountStartDate.HasValue)
+                product.DiscountStartDate = productDto.DiscountStartDate.Value;
+
+            if (productDto.DiscountEndDate.HasValue)
+                product.DiscountEndDate = productDto.DiscountEndDate.Value;
 
 
             if (productDto.Image != null)
@@ -103,6 +132,28 @@ namespace DidMark.Core.Services.Implementations
 
             productRepository.UpdateEntity(product);
             await productRepository.SaveChanges();
+
+            if (productDto.Attributes != null && productDto.Attributes.Any())
+            {
+                // 🔹 حذف اتریبیوت‌های قدیمی و ثبت جدیدها
+                var oldAttributes = await productAttributeRepository.GetEntitiesQuery()
+                    .Where(a => a.ProductId == product.Id)
+                    .ToListAsync();
+
+                productAttributeRepository.DeleteEntities(oldAttributes);
+                await productAttributeRepository.SaveChanges();
+
+
+                var newAttributes = productDto.Attributes.Select(a => new ProductAttribute
+                {
+                    ProductId = product.Id,
+                    PAttributeId = a.AttributeId,
+                    Value = a.Value
+                }).ToList();
+
+                await productAttributeRepository.AddRange(newAttributes);
+                await productAttributeRepository.SaveChanges();
+            }
         }
 
         public async Task<bool> DeleteProduct(long productId)
@@ -119,31 +170,114 @@ namespace DidMark.Core.Services.Implementations
             return true;
         }
 
-        public async Task<Product> GetProductById(long productId)
+        public async Task<ProductDto> GetProductById(long productId)
         {
-            return await productRepository.GetEntitiesQuery()
+            // دریافت محصول همراه با اتریبیوت‌ها
+            var product = await productRepository.GetEntitiesQuery()
+                .Include(p => p.ProductAttributes)
+                .ThenInclude(pa => pa.PAttribute)
+                .Include(p => p.ProductSelectedCategories)
+                    .ThenInclude(pc => pc.ProductCategories)
+                .Include(p => p.ProductGalleries)
                 .SingleOrDefaultAsync(p => p.Id == productId && !p.IsDelete);
-        }
 
-        public async Task<List<Product>> GetRelatedProducts(long productId)
-        {
-            var product = await GetProductById(productId);
             if (product == null) return null;
 
-            var categoryIds = await productSelectedCategoriesRepository.GetEntitiesQuery()
-                .Where(s => s.ProductId == productId)
-                .Select(s => s.ProductCategoriesId)
-                .ToListAsync();
+            // تبدیل به ProductDto
+            return new ProductDto
+            {
+                Id = product.Id,
+                ProductName = product.ProductName,
+                Description = product.Description,
+                ShortDescription = product.ShortDescription,
+                Price = product.Price,
+                NumberofProduct = product.NumberofProduct,
+                IsExists = product.IsExists,
+                IsSpecial = product.IsSpecial,
+                ImageName = product.ImageName,
+                FinalPrice = product.FinalPrice,
+                DiscountPercent = product.DiscountPercent,
+                DiscountStartDate = product.DiscountStartDate,
+                DiscountEndDate = product.DiscountEndDate,
+                Attributes = product.ProductAttributes?.Select(pa => new ProductAttributeDto
+                {
+                    PAttributeId = pa.PAttributeId,
+                    Value = pa.Value,
+                    Name = pa.PAttribute?.Name
+                }).ToList(),
+                Categories = product.ProductSelectedCategories?.Select(pc => new ProductCategoryDTO
+                {
+                    Id = pc.ProductCategoriesId,
+                    Title = pc.ProductCategories?.Title,
+                    ParentId = pc.ProductCategories?.ParentId,
+                    UrlTitle = pc.ProductCategories?.UrlTitle
+                }).ToList(),
+                Galleries = product.ProductGalleries?.Where(g => !g.IsDelete)
+                            .Select(g => g.ImageName).ToList()
+            };
+        }
 
-            return await productRepository.GetEntitiesQuery()
-                .SelectMany(s => s.ProductSelectedCategories
-                    .Where(f => categoryIds.Contains(f.ProductCategoriesId))
-                    .Select(t => t.Product))
-                .Where(s => s.Id != productId)
-                .OrderByDescending(s => s.CreateDate)
+
+
+        public async Task<List<ProductDto>> GetRelatedProducts(long productId)
+        {
+            // دریافت محصول اصلی
+            var product = await productRepository.GetEntitiesQuery()
+                .Include(p => p.ProductSelectedCategories)
+                .SingleOrDefaultAsync(p => p.Id == productId && !p.IsDelete);
+
+            if (product == null) return null;
+
+            var categoryIds = product.ProductSelectedCategories
+                .Select(s => s.ProductCategoriesId)
+                .ToList();
+
+            // دریافت محصولات مرتبط با همان دسته‌بندی‌ها
+            var relatedProducts = await productRepository.GetEntitiesQuery()
+                .Include(p => p.ProductAttributes)
+                .ThenInclude(pa => pa.PAttribute)
+                .Include(p => p.ProductSelectedCategories)
+                    .ThenInclude(pc => pc.ProductCategories)
+                .Include(p => p.ProductGalleries)
+                .Where(p => p.Id != productId && p.ProductSelectedCategories.Any(pc => categoryIds.Contains(pc.ProductCategoriesId)) && !p.IsDelete)
+                .OrderByDescending(p => p.CreateDate)
                 .Take(4)
                 .ToListAsync();
+
+            // تبدیل به ProductDto
+            return relatedProducts.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                ProductName = p.ProductName,
+                Description = p.Description,
+                ShortDescription = p.ShortDescription,
+                Price = p.Price,
+                NumberofProduct = p.NumberofProduct,
+                IsExists = p.IsExists,
+                IsSpecial = p.IsSpecial,
+                ImageName = p.ImageName,
+                FinalPrice = product.FinalPrice,
+                DiscountPercent = product.DiscountPercent,
+                DiscountStartDate = product.DiscountStartDate,
+                DiscountEndDate = product.DiscountEndDate,
+                Attributes = p.ProductAttributes?.Select(pa => new ProductAttributeDto
+                {
+                    PAttributeId = pa.PAttributeId,
+                    Value = pa.Value,
+                    Name = pa.PAttribute?.Name
+                }).ToList(),
+                Categories = p.ProductSelectedCategories?.Select(pc => new ProductCategoryDTO
+                {
+                    Id = pc.ProductCategoriesId,
+                    Title = pc.ProductCategories?.Title,
+                    ParentId = pc.ProductCategories?.ParentId,
+                    UrlTitle = pc.ProductCategories?.UrlTitle
+                }).ToList(),
+                Galleries = p.ProductGalleries?.Where(g => !g.IsDelete)
+                            .Select(g => g.ImageName).ToList()
+            }).ToList();
         }
+
 
         public async Task<EditProductDTO> GetProductForEdit(long productId)
         {
@@ -157,20 +291,70 @@ namespace DidMark.Core.Services.Implementations
                 ProductName = product.ProductName,
                 Description = product.Description,
                 ShortDescription = product.ShortDescription,
-                Color = product.Color,
-                Size = product.Size,
-                Code = product.Code,
+                //Color = product.Color,
+                //Size = product.Size,
+                //Code = product.Code,
                 NumberofProduct = product.NumberofProduct,
                 Price = product.Price,
                 IsExists = product.IsExists,
-                IsSpecial = product.IsSpecial
+                IsSpecial = product.IsSpecial,
+                DiscountPercent = product.DiscountPercent,
+                DiscountStartDate = product.DiscountStartDate,
+                DiscountEndDate = product.DiscountEndDate,
+                Attributes = product.Attributes.Select(pa => new EditProductAttributeDto
+                {
+                    Value = pa.Value,
+                    AttributeId = pa.PAttributeId
+                }).ToList()
             };
         }
-        public async Task<Product> GetProductByUserOrder(long productId)
+        public async Task<ProductDto> GetProductByUserOrder(long productId)
         {
-            return await productRepository.GetEntitiesQuery()
+            // دریافت محصول همراه با اتریبیوت‌ها، دسته‌بندی‌ها و گالری‌ها
+            var product = await productRepository.GetEntitiesQuery()
+                .Include(p => p.ProductAttributes)
+                .ThenInclude(pa => pa.PAttribute)
+                .Include(p => p.ProductSelectedCategories)
+                    .ThenInclude(pc => pc.ProductCategories)
+                .Include(p => p.ProductGalleries)
                 .SingleOrDefaultAsync(p => p.Id == productId && !p.IsDelete);
+
+            if (product == null) return null;
+
+            // تبدیل به ProductDto
+            return new ProductDto
+            {
+                Id = product.Id,
+                ProductName = product.ProductName,
+                Description = product.Description,
+                ShortDescription = product.ShortDescription,
+                Price = product.Price,
+                NumberofProduct = product.NumberofProduct,
+                IsExists = product.IsExists,
+                IsSpecial = product.IsSpecial,
+                ImageName = product.ImageName,
+                FinalPrice = product.FinalPrice,
+                DiscountPercent = product.DiscountPercent,
+                DiscountStartDate = product.DiscountStartDate,
+                DiscountEndDate = product.DiscountEndDate,
+                Attributes = product.ProductAttributes?.Select(pa => new ProductAttributeDto
+                {
+                    PAttributeId = pa.PAttributeId,
+                    Value = pa.Value,
+                    Name = pa.PAttribute?.Name
+                }).ToList(),
+                Categories = product.ProductSelectedCategories?.Select(pc => new ProductCategoryDTO
+                {
+                    Id = pc.ProductCategoriesId,
+                    Title = pc.ProductCategories?.Title,
+                    ParentId = pc.ProductCategories?.ParentId,
+                    UrlTitle = pc.ProductCategories?.UrlTitle
+                }).ToList(),
+                Galleries = product.ProductGalleries?.Where(g => !g.IsDelete)
+                            .Select(g => g.ImageName).ToList()
+            };
         }
+
 
         public async Task<bool> IsExistsProductById(long productId)
         {
@@ -180,7 +364,11 @@ namespace DidMark.Core.Services.Implementations
 
         public async Task<FilterProductsDTO> FilterProducts(FilterProductsDTO filter)
         {
-            var productsQuery = productRepository.GetEntitiesQuery().AsQueryable();
+            var productsQuery = productRepository.GetEntitiesQuery()
+                .Include(p => p.ProductAttributes)
+                .ThenInclude(pa => pa.PAttribute)
+                .Where(p => !p.IsDelete)
+                .AsQueryable();
 
             // فیلتر و مرتب‌سازی طبق filter
             if (!string.IsNullOrEmpty(filter.Title))
@@ -350,5 +538,34 @@ namespace DidMark.Core.Services.Implementations
             productSelectedCategoriesRepository?.Dispose();
         }
         #endregion
+        public async Task AddProductVisit(long productId, string userIp)
+        {
+            var visit = new ProductVisit
+            {
+                ProductId = productId,
+                UserIp = userIp, // اگر مدل شما int است
+                CreateDate = DateTime.Now,
+                IsDelete = false
+            };
+
+            await productVisitrepository.AddEntity(visit);
+            await productVisitrepository.SaveChanges();
+        }
+        public async Task<List<ProductVisitDto>> GetProductVisits(long productId)
+        {
+            var visits = await productVisitrepository.GetEntitiesQuery()
+                .Where(v => v.ProductId == productId && !v.IsDelete)
+                .ToListAsync();
+
+            return visits.Select(v => new ProductVisitDto
+            {
+                Id = v.Id,
+                ProductId = v.ProductId,
+                UserIp = v.UserIp.ToString(), // اگر int هست
+                CreateDate = v.CreateDate
+            }).ToList();
+        }
+
+
     }
 }

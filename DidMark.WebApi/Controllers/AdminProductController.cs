@@ -146,6 +146,7 @@ namespace DidMark.WebApi.Controllers
         #region Product Galleries
 
         [HttpPost("galleries")]
+        [PermissionChecker("Admin")]
         public async Task<IActionResult> AddProductGallery([FromForm] AddProductGalleryDTO dto)
         {
             if (ModelState.IsValid)
@@ -157,6 +158,7 @@ namespace DidMark.WebApi.Controllers
         }
 
         [HttpDelete("galleries/{galleryId}/{productId}")]
+        [PermissionChecker("Admin")]
         public async Task<IActionResult> DeleteProductGallery(long galleryId, long productId)
         {
             var result = await _productGalleryService.DeleteProductGallery(galleryId, productId);
@@ -166,6 +168,7 @@ namespace DidMark.WebApi.Controllers
 
 
         [HttpGet("{productId}/galleries")]
+        [PermissionChecker("Admin")]
         public async Task<IActionResult> GetProductGalleries(long productId)
         {
             var galleries = await _productGalleryService.GetProductGalleriesByProductId(productId);

@@ -146,5 +146,6 @@ namespace DidMark.Core.Services.Implementations
                 .Select(x => x.Role.RoleTitle)
                 .ToListAsync();
         }
+
     }
 }

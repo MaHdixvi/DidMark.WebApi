@@ -57,7 +57,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 4, 23, 45, 27, 901, DateTimeKind.Local).AddTicks(6807),
+                            CreateDate = new DateTime(2025, 9, 9, 7, 6, 26, 883, DateTimeKind.Local).AddTicks(8817),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Owner",
@@ -66,7 +66,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 9, 4, 23, 45, 27, 901, DateTimeKind.Local).AddTicks(6819),
+                            CreateDate = new DateTime(2025, 9, 9, 7, 6, 26, 883, DateTimeKind.Local).AddTicks(8836),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Owner",
@@ -109,7 +109,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 4, 23, 45, 27, 901, DateTimeKind.Local).AddTicks(7133),
+                            CreateDate = new DateTime(2025, 9, 9, 7, 6, 26, 883, DateTimeKind.Local).AddTicks(9193),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 1L,
@@ -118,7 +118,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 9, 4, 23, 45, 27, 901, DateTimeKind.Local).AddTicks(7134),
+                            CreateDate = new DateTime(2025, 9, 9, 7, 6, 26, 883, DateTimeKind.Local).AddTicks(9195),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 2L,
@@ -146,7 +146,6 @@ namespace DidMark.DataLayer.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -156,7 +155,6 @@ namespace DidMark.DataLayer.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -173,17 +171,11 @@ namespace DidMark.DataLayer.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("LastUpdateDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("NationalCode")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -217,9 +209,9 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 4, 23, 45, 27, 901, DateTimeKind.Local).AddTicks(7114),
+                            CreateDate = new DateTime(2025, 9, 9, 7, 6, 26, 883, DateTimeKind.Local).AddTicks(9167),
                             Email = "admin@didmark.com",
-                            EmailActiveCode = "9a85eaa6-91d0-4305-b794-2192d5647aea",
+                            EmailActiveCode = "55282cc8-565a-46a7-b931-20177e170491",
                             FirstName = "Admin",
                             IsActivated = true,
                             IsDelete = false,
@@ -227,12 +219,156 @@ namespace DidMark.DataLayer.Migrations
                             IsPhoneActivated = false,
                             LastName = "User",
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            NationalCode = "4271706248",
                             Password = "90-6B-98-8B-FC-DB-F7-30-F4-C6-A8-15-76-C2-88-54",
                             PhoneActiveCode = "1234",
                             PhoneNumber = "09100295341",
                             Username = "Admin"
                         });
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCode", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DiscountPercentage")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("ExpireDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("MaxUsageCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("OffCode");
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCodeCategory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("OffCodeId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("OffCodeId");
+
+                    b.ToTable("OffCodeCategory");
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCodeProduct", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("OffCodeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OffCodeId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("OffCodeProduct");
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCodeUser", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("AssignedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("OffCodeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("int");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OffCodeId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("OffCodeUser");
                 });
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.Order", b =>
@@ -255,8 +391,8 @@ namespace DidMark.DataLayer.Migrations
                     b.Property<DateTime>("LastUpdateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("OffCode")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long?>("OffCodeId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime?>("PaymentDate")
                         .HasColumnType("datetime2");
@@ -265,6 +401,8 @@ namespace DidMark.DataLayer.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OffCodeId");
 
                     b.HasIndex("UserId");
 
@@ -294,8 +432,8 @@ namespace DidMark.DataLayer.Migrations
                     b.Property<long>("OrderId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("Price")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<long>("ProductId")
                         .HasColumnType("bigint");
@@ -309,6 +447,37 @@ namespace DidMark.DataLayer.Migrations
                     b.ToTable("OrderDetails");
                 });
 
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Product.PAttribute", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CategoryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("PAttribute");
+                });
+
             modelBuilder.Entity("DidMark.DataLayer.Entities.Product.Product", b =>
                 {
                     b.Property<long>("Id")
@@ -317,20 +486,21 @@ namespace DidMark.DataLayer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<long>("Code")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DiscountEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DiscountPercent")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DiscountStartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("ImageName")
                         .IsRequired()
@@ -364,14 +534,45 @@ namespace DidMark.DataLayer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Size")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.HasKey("Id");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Product.ProductAttribute", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("PAttributeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PAttributeId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductAttribute");
                 });
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Product.ProductCategories", b =>
@@ -492,19 +693,17 @@ namespace DidMark.DataLayer.Migrations
                     b.Property<DateTime>("LastUpdateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<long>("ProductId1")
+                    b.Property<long>("ProductId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("UserIp")
+                    b.Property<string>("UserIp")
+                        .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId1");
+                    b.HasIndex("ProductId");
 
                     b.ToTable("ProductVisit");
                 });
@@ -526,8 +725,8 @@ namespace DidMark.DataLayer.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -537,17 +736,27 @@ namespace DidMark.DataLayer.Migrations
                     b.Property<bool>("IsDelete")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsReplied")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("LastUpdateDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("ReplyDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
@@ -609,13 +818,85 @@ namespace DidMark.DataLayer.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCode", b =>
+                {
+                    b.HasOne("DidMark.DataLayer.Entities.Account.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCodeCategory", b =>
+                {
+                    b.HasOne("DidMark.DataLayer.Entities.Product.ProductCategories", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DidMark.DataLayer.Entities.Orders.OffCode", "OffCode")
+                        .WithMany("OffCodeCategories")
+                        .HasForeignKey("OffCodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("OffCode");
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCodeProduct", b =>
+                {
+                    b.HasOne("DidMark.DataLayer.Entities.Orders.OffCode", "OffCode")
+                        .WithMany("OffCodeProducts")
+                        .HasForeignKey("OffCodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DidMark.DataLayer.Entities.Product.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OffCode");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCodeUser", b =>
+                {
+                    b.HasOne("DidMark.DataLayer.Entities.Orders.OffCode", "OffCode")
+                        .WithMany("UserOffCodes")
+                        .HasForeignKey("OffCodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DidMark.DataLayer.Entities.Account.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OffCode");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.Order", b =>
                 {
+                    b.HasOne("DidMark.DataLayer.Entities.Orders.OffCode", "OffCode")
+                        .WithMany("Orders")
+                        .HasForeignKey("OffCodeId");
+
                     b.HasOne("DidMark.DataLayer.Entities.Account.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("OffCode");
 
                     b.Navigation("User");
                 });
@@ -635,6 +916,36 @@ namespace DidMark.DataLayer.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Product.PAttribute", b =>
+                {
+                    b.HasOne("DidMark.DataLayer.Entities.Product.ProductCategories", "Category")
+                        .WithMany("PAttribute")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Product.ProductAttribute", b =>
+                {
+                    b.HasOne("DidMark.DataLayer.Entities.Product.PAttribute", "PAttribute")
+                        .WithMany()
+                        .HasForeignKey("PAttributeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DidMark.DataLayer.Entities.Product.Product", "Product")
+                        .WithMany("ProductAttributes")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PAttribute");
 
                     b.Navigation("Product");
                 });
@@ -682,7 +993,7 @@ namespace DidMark.DataLayer.Migrations
                 {
                     b.HasOne("DidMark.DataLayer.Entities.Product.Product", "Product")
                         .WithMany("ProductVisit")
-                        .HasForeignKey("ProductId1")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -701,6 +1012,17 @@ namespace DidMark.DataLayer.Migrations
                     b.Navigation("UserRoles");
                 });
 
+            modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCode", b =>
+                {
+                    b.Navigation("OffCodeCategories");
+
+                    b.Navigation("OffCodeProducts");
+
+                    b.Navigation("Orders");
+
+                    b.Navigation("UserOffCodes");
+                });
+
             modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.Order", b =>
                 {
                     b.Navigation("OrderDetails");
@@ -709,6 +1031,8 @@ namespace DidMark.DataLayer.Migrations
             modelBuilder.Entity("DidMark.DataLayer.Entities.Product.Product", b =>
                 {
                     b.Navigation("OrderDetails");
+
+                    b.Navigation("ProductAttributes");
 
                     b.Navigation("ProductGalleries");
 
@@ -719,6 +1043,8 @@ namespace DidMark.DataLayer.Migrations
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Product.ProductCategories", b =>
                 {
+                    b.Navigation("PAttribute");
+
                     b.Navigation("ProductSelectedCategories");
                 });
 #pragma warning restore 612, 618

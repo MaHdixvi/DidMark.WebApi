@@ -17,14 +17,20 @@ namespace DidMark.Core.Services.Interfaces
         Task<bool> ExistsByEmailAsync(string email);
         Task<LoginUserResult> LoginUserAsync(LoginUserDTO login, bool checkAdminRole = false);
         Task<ChangePasswordResult> ChangePasswordAsync(ChangePasswordDTO changePassword, long userId);
+        Task<User?> GetUserByPhoneNumberAsync(string phoneNumber);
         Task<User?> GetUserByEmailAsync(string email);
         Task<User?> GetUserByIdAsync(long userId);
         Task<bool> ActivateUserAsync(User user);
         Task<User?> GetUserByActivationCodeAsync(string activationCode);
-        Task<bool> UpdateUserAsync(EditUserDTO user, long userId);
+        Task<User?> GetUserByEmailActivationCodeAsync(string activationCode);
+        Task<User?> GetUserByUsernameAsync(string username);
+        Task<EditUserResult> UpdateUserAsync(EditUserDTO user, long userId);
         Task<bool> IsAdminAsync(long userId);
         Task<bool> ToggleStatusAsync(long userId);
-        Task<bool> UpdateUserByAdminAsync(EditUserByAdminDTO dto);
+        Task<EditUserByAdminResult> UpdateUserByAdminAsync(EditUserByAdminDTO dto);
+        Task<bool> ActivateUserEmailAsync(User user);
+        Task<bool> SendEmailActivationSmsAsync(SendEmailActivationSmsDto dto);
+        Task<bool> SendPhoneNumberActivationSmsAsync(SendPhoneNumberActivationSmsDto dto);
 
     }
 }

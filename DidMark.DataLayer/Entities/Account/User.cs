@@ -15,9 +15,8 @@ namespace DidMark.DataLayer.Entities.Account
         #region properties
 
         [Display(Name = "ایمیل")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [Display(Name = "نام کاربری")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
@@ -31,14 +30,12 @@ namespace DidMark.DataLayer.Entities.Account
         public string Password { get; set; }
 
         [Display(Name = "نام")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string FirstName { get; set; }
+        public string? FirstName { get; set; }
 
         [Display(Name = "نام خانوادگی")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string LastName { get; set; }
+        public string? LastName { get; set; }
 
         [Display(Name = "شهر")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
@@ -47,11 +44,6 @@ namespace DidMark.DataLayer.Entities.Account
         [Display(Name = "استان")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
         public string? Province { get; set; }
-
-        [Display(Name = "کدملی")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string NationalCode { get; set; }
 
         [Display(Name = "آدرس")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]

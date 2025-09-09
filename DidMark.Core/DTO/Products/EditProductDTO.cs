@@ -28,16 +28,16 @@ namespace DidMark.Core.DTO.Products
         [Display(Name = " توضیحات کوتاه")]
         public string? ShortDescription { get; set; }
 
-        [Display(Name = "رنگ")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string? Color { get; set; }
+        //[Display(Name = "رنگ")]
+        //[MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
+        //public string? Color { get; set; }
 
-        [Display(Name = "کد")]
-        public long? Code { get; set; }
+        //[Display(Name = "کد")]
+        //public long? Code { get; set; }
 
-        [Display(Name = "سایز")]
-        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string? Size { get; set; }
+        //[Display(Name = "سایز")]
+        //[MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
+        //public string? Size { get; set; }
 
         [Display(Name = "تعداد محصول")]
         public int? NumberofProduct { get; set; }
@@ -47,5 +47,16 @@ namespace DidMark.Core.DTO.Products
 
         [Display(Name = "ویژه")]
         public bool? IsSpecial { get; set; }
+        public List<EditProductAttributeDto> Attributes { get; set; } = new();
+        // 🔹 تخفیف
+        [Display(Name = "درصد تخفیف")]
+        public int? DiscountPercent { get; set; }
+
+        [Display(Name = "تاریخ شروع تخفیف")]
+        public DateTime? DiscountStartDate { get; set; }
+
+        [Display(Name = "تاریخ پایان تخفیف")]
+        public DateTime? DiscountEndDate { get; set; }
+
     }
 }

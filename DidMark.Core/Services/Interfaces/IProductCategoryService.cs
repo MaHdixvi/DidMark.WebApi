@@ -1,4 +1,5 @@
-﻿using DidMark.Core.DTO.Products.ProductCategory;
+﻿using DidMark.Core.DTO.Products;
+using DidMark.Core.DTO.Products.ProductCategory;
 using DidMark.DataLayer.Entities.Product;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace DidMark.Core.Services.Interfaces
         Task<bool> DeleteCategory(long id);
         Task<List<ProductCategories>> GetRootCategories();
         Task<List<ProductCategories>> GetChildCategories(long parentId);
+        Task<List<AttributeDto>> GetCategoryAttributesAsync(int categoryId);
 
 
         // مدیریت محصولات مرتبط با دسته

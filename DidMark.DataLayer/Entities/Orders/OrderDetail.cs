@@ -1,4 +1,5 @@
 ﻿using DidMark.DataLayer.Entities.Common;
+using DidMark.DataLayer.Entities.Product;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,6 +1,7 @@
 ﻿using DidMark.Core.DTO.Slider;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
+using DidMark.WebApi.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -40,6 +41,7 @@ namespace DidMark.WebApi.Controllers
         }
 
         [HttpPost("add")]
+        [PermissionChecker("Admin")]
         public async Task<IActionResult> AddSlider([FromForm] AddSliderDTO dto)
         {
             var (success, sliderId) = await _sliderService.AddSlider(dto);
@@ -50,6 +52,7 @@ namespace DidMark.WebApi.Controllers
         }
 
         [HttpPut("update")]
+        [PermissionChecker("Admin")]
         public async Task<IActionResult> UpdateSlider([FromForm] EditSliderDTO dto)
         {
             var (success, sliderId) = await _sliderService.UpdateSlider(dto);
@@ -60,6 +63,7 @@ namespace DidMark.WebApi.Controllers
         }
 
         [HttpDelete("{id:long}")]
+        [PermissionChecker("Admin")]
         public async Task<IActionResult> DeleteSlider(long id)
         {
             var success = await _sliderService.DeleteSlider(id);

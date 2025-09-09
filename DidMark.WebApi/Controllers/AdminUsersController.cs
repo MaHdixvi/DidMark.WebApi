@@ -58,10 +58,13 @@ namespace DidMark.WebApi.Controllers
 
             dto.Id = id; // اطمینان از اینکه آی‌دی درست ست شده
             var result = await _userService.UpdateUserByAdminAsync(dto);
-            if (!result)
-                return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
 
-            return JsonResponseStatus.Success(new { message = "کاربر با موفقیت بروزرسانی شد" });
+            return result switch
+            {
+                EditUserByAdminResult.Success => JsonResponseStatus.Success(new { message = "اطلاعات کاربر با موفقیت ویرایش شد" }),
+                EditUserByAdminResult.EmailExists => JsonResponseStatus.BadRequest(new { message = "ایمیل تکراری است " }),
+                _ => JsonResponseStatus.Error(new { message = "خطا در ویرایش اطلاعات کاربر" })
+            };
         }
         #endregion
 

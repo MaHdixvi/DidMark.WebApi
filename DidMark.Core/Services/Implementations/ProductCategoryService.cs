@@ -15,13 +15,16 @@ namespace DidMark.Core.Services.Implementations
     {
         private readonly IGenericRepository<ProductCategories> _categoryRepo;
         private readonly IGenericRepository<ProductSelectedCategories> _productCategoryRepo;
+        private readonly IGenericRepository<PAttribute> _producyAttributeRepo;
 
         public ProductCategoryService(
             IGenericRepository<ProductCategories> categoryRepo,
-            IGenericRepository<ProductSelectedCategories> productCategoryRepo)
+            IGenericRepository<ProductSelectedCategories> productCategoryRepo,
+            IGenericRepository<PAttribute> productAttributeRepo)
         {
             _categoryRepo = categoryRepo;
             _productCategoryRepo = productCategoryRepo;
+            _producyAttributeRepo = productAttributeRepo;
         }
 
         #region Category CRUD
@@ -111,6 +114,19 @@ namespace DidMark.Core.Services.Implementations
         {
             return await _categoryRepo.GetEntitiesQuery()
                 .Where(c => !c.IsDelete && c.ParentId == parentId)
+                .ToListAsync();
+        }
+
+
+                public async Task<List<AttributeDto>> GetCategoryAttributesAsync(int categoryId)
+        {
+            return await _producyAttributeRepo.GetEntitiesQuery()
+                .Where(a => a.CategoryId == categoryId)
+                .Select(a => new AttributeDto
+                {
+                    Id = a.Id,
+                    Name = a.Name
+                })
                 .ToListAsync();
         }
 

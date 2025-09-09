@@ -86,7 +86,7 @@ public partial class MasterContext : DbContext
                 FirstName = "Admin",
                 LastName = "User",
                 PhoneActiveCode ="1234",
-                NationalCode ="4271706248",
+                //NationalCode ="4271706248",
                 EmailActiveCode =Guid.NewGuid().ToString(),
                 IsActivated = true,
                 CreateDate = DateTime.Now,

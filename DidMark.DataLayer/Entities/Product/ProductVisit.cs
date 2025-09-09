@@ -12,11 +12,11 @@ namespace DidMark.DataLayer.Entities.Product
     {
         #region properties
 
-        public int ProductId { get; set; }
+        public long ProductId { get; set; }
         [Display(Name = "IP")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public int UserIp { get; set; }
+        public string UserIp { get; set; }
         #endregion
         #region relations 
         public virtual Product Product { get; set; }

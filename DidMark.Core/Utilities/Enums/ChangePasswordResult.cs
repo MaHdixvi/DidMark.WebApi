@@ -11,6 +11,7 @@ namespace DidMark.Core.Utilities.Enums
         Success,
         IncorrectCurrentPassword,
         SameAsOldPassword,
+        NotSameNewPasswordAndConfirmPassword,
         UserNotFound,
         Error
     }
