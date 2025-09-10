@@ -17,9 +17,6 @@ namespace DidMark.DataLayer.Entities.Orders
         // اگر بخوای محدودیت تعداد استفاده یا ارتباط به کاربر خاص بزنی، اینجا اضافه میشه
         public int? MaxUsageCount { get; set; }
         public int UsedCount { get; set; }
-        // 🔹 اگر این کد تخفیف برای یک یوزر خاص باشه
-        public long? UserId { get; set; }
-        public virtual User User { get; set; }
 
         #endregion
 

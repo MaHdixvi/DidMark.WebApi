@@ -51,9 +51,6 @@ namespace DidMark.Core.Services.Implementations
             var offCode = await query.SingleOrDefaultAsync();
             if (offCode == null) return null;
 
-            // 🔹 محدودیت برای UserId مستقیم (یک‌به‌چند)
-            if (offCode.UserId.HasValue && offCode.UserId != userId)
-                return null;
 
             // 🔹 محدودیت برای چندبه‌چند (OffCodeUser)
             if (offCode.UserOffCodes.Any() && userId.HasValue)
@@ -125,7 +122,6 @@ namespace DidMark.Core.Services.Implementations
                 DiscountPercentage = dto.DiscountPercentage,
                 ExpireDate = dto.ExpireDate,
                 MaxUsageCount = dto.MaxUsageCount,
-                UserId = dto.UserId,
                 UsedCount = 0,
                 IsDelete = false
             };
@@ -147,8 +143,6 @@ namespace DidMark.Core.Services.Implementations
                     ExpireDate = c.ExpireDate,
                     MaxUsageCount = c.MaxUsageCount,
                     UsedCount = c.UsedCount,
-                    UserId = c.UserId,
-
                     // 👇 پر کردن DTO های مرتبط
                     Users = c.UserOffCodes.Select(u => new OffCodeUserDTO
                     {
@@ -182,7 +176,6 @@ namespace DidMark.Core.Services.Implementations
             offCode.DiscountPercentage = dto.DiscountPercentage;
             offCode.ExpireDate = dto.ExpireDate;
             offCode.MaxUsageCount = dto.MaxUsageCount;
-            offCode.UserId = dto.UserId;
 
             _offCodeRepository.UpdateEntity(offCode);
             await _offCodeRepository.SaveChanges();

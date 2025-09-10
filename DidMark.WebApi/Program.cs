@@ -1,4 +1,5 @@
-﻿using DidMark.Core.Security;
+﻿using CodecellShare.Interfaces;
+using DidMark.Core.Security;
 using DidMark.Core.Services.Implementations;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Convertors;
@@ -86,6 +87,8 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAccessService, AccessService>();
 builder.Services.AddScoped<IOffCodeService, OffCodeService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<ITransactionLogService, TransactionLogService>();
+builder.Services.AddScoped<IZarinPalService, ZarinPalService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMvc();

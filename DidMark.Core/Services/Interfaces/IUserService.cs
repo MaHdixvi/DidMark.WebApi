@@ -1,4 +1,5 @@
 ﻿using DidMark.Core.DTO.Account;
+using DidMark.Core.DTO.User;
 using DidMark.Core.DTO.Users;
 using DidMark.Core.Utilities.Enums;
 using DidMark.DataLayer.Entities.Account;
@@ -12,14 +13,14 @@ namespace DidMark.Core.Services.Interfaces
 {
     public interface IUserService : IDisposable
     {
-        Task<List<User>> GetAllUsersAsync();
+        Task<List<UserDto>> GetAllUsersAsync();
         Task<RegisterUserResult> RegisterUserAsync(RegisterUserDTO register);
         Task<bool> ExistsByEmailAsync(string email);
         Task<LoginUserResult> LoginUserAsync(LoginUserDTO login, bool checkAdminRole = false);
         Task<ChangePasswordResult> ChangePasswordAsync(ChangePasswordDTO changePassword, long userId);
         Task<User?> GetUserByPhoneNumberAsync(string phoneNumber);
         Task<User?> GetUserByEmailAsync(string email);
-        Task<User?> GetUserByIdAsync(long userId);
+        Task<UserDto?> GetUserByIdAsync(long userId);
         Task<bool> ActivateUserAsync(User user);
         Task<User?> GetUserByActivationCodeAsync(string activationCode);
         Task<User?> GetUserByEmailActivationCodeAsync(string activationCode);

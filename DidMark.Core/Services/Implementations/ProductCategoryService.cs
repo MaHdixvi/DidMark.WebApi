@@ -29,17 +29,32 @@ namespace DidMark.Core.Services.Implementations
 
         #region Category CRUD
 
-        public async Task<List<ProductCategories>> GetAllActiveCategories()
+        public async Task<List<ProductCategoryDTO>> GetAllActiveCategories()
         {
             return await _categoryRepo.GetEntitiesQuery()
-                .Where(c => !c.IsDelete)
-                .ToListAsync();
+               .Where(c => !c.IsDelete)
+               .Select(c => new ProductCategoryDTO
+               {
+                   Id = c.Id,
+                   Title = c.Title,
+                   UrlTitle = c.UrlTitle,
+                   ParentId = c.ParentId
+               })
+               .ToListAsync();
         }
 
-        public async Task<ProductCategories> GetCategoryById(long id)
+        public async Task<ProductCategoryDTO> GetCategoryById(long id)
         {
             return await _categoryRepo.GetEntitiesQuery()
-                .FirstOrDefaultAsync(c => c.Id == id && !c.IsDelete);
+            .Where(c => c.Id == id && !c.IsDelete)
+            .Select(c => new ProductCategoryDTO
+            {
+                Id = c.Id,
+                Title = c.Title,
+                UrlTitle = c.UrlTitle,
+                ParentId = c.ParentId
+            })
+            .FirstOrDefaultAsync();
         }
 
         public async Task AddCategory(AddProductCategoryDTO dto)
@@ -102,19 +117,33 @@ namespace DidMark.Core.Services.Implementations
         }
 
         // دسته‌بندی‌های سطح اول (بدون Parent)
-        public async Task<List<ProductCategories>> GetRootCategories()
+        public async Task<List<ProductCategoryDTO>> GetRootCategories()
         {
             return await _categoryRepo.GetEntitiesQuery()
                 .Where(c => !c.IsDelete && c.ParentId == null)
+                .Select(c => new ProductCategoryDTO
+                {
+                    Id = c.Id,
+                    Title = c.Title,
+                    UrlTitle = c.UrlTitle,
+                    ParentId = c.ParentId
+                })
                 .ToListAsync();
         }
 
         // دسته‌بندی‌های فرزند یک دسته‌بندی مشخص
-        public async Task<List<ProductCategories>> GetChildCategories(long parentId)
+        public async Task<List<ProductCategoryDTO>> GetChildCategories(long parentId)
         {
             return await _categoryRepo.GetEntitiesQuery()
-                .Where(c => !c.IsDelete && c.ParentId == parentId)
-                .ToListAsync();
+             .Where(c => !c.IsDelete && c.ParentId == parentId)
+             .Select(c => new ProductCategoryDTO
+             {
+                 Id = c.Id,
+                 Title = c.Title,
+                 UrlTitle = c.UrlTitle,
+                 ParentId = c.ParentId
+             })
+             .ToListAsync();
         }
 
 
@@ -134,14 +163,19 @@ namespace DidMark.Core.Services.Implementations
 
         #region Product-Category Management
 
-        public async Task<List<ProductCategories>> GetCategoriesOfProduct(long productId)
+        public async Task<List<ProductCategoryDTO>> GetCategoriesOfProduct(long productId)
         {
             return await _productCategoryRepo.GetEntitiesQuery()
-                .Where(pc => pc.ProductId == productId && !pc.IsDelete)
-                .Include(pc => pc.ProductCategories)
-                .Select(pc => pc.ProductCategories)
-                .Where(c => !c.IsDelete)
-                .ToListAsync();
+              .Where(pc => pc.ProductId == productId && !pc.IsDelete)
+              .Include(pc => pc.ProductCategories)
+              .Select(pc => new ProductCategoryDTO
+              {
+                  Id = pc.ProductCategories.Id,
+                  Title = pc.ProductCategories.Title,
+                  UrlTitle = pc.ProductCategories.UrlTitle,
+                  ParentId = pc.ProductCategories.ParentId
+              })
+              .ToListAsync();
         }
 
         public async Task AddCategoryToProduct(long productId, long categoryId)

@@ -132,19 +132,6 @@ namespace DidMark.WebApi.Controllers
 
         #endregion
 
-        //#region Get Product Active Galleries
-
-        //[HttpGet("get-product-active-galleries/{id}")]
-        //[PermissionChecker("Admin")]
-        //public async Task<IActionResult> GetProductActiveGalleries(long id)
-        //{
-        //    var galleries = await _productService.GetProductActiveGalleries(id);
-        //    return JsonResponseStatus.Success(galleries);
-        //}
-
-        //#endregion
-        #region Product Galleries
-
         [HttpPost("galleries")]
         [PermissionChecker("Admin")]
         public async Task<IActionResult> AddProductGallery([FromForm] AddProductGalleryDTO dto)
@@ -174,7 +161,6 @@ namespace DidMark.WebApi.Controllers
             var galleries = await _productGalleryService.GetProductGalleriesByProductId(productId);
             return JsonResponseStatus.Success(galleries);
         }
-        #endregion
 
     }
 }

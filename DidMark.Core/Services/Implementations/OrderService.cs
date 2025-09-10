@@ -46,7 +46,10 @@ namespace DidMark.Core.Services.Implementations
                 UserId = userId,
                 IsPay = false,
                 PaymentDate = null,
-                OrderDetails = new List<OrderDetail>()
+                OrderDetails = new List<OrderDetail>(),
+                TotalPrice = 0m,
+                Subtotal = 0m,
+                DiscountAmount = 0m 
             };
 
             await _orderRepository.AddEntity(order);
@@ -100,33 +103,57 @@ namespace DidMark.Core.Services.Implementations
         }
 
 
-        public async Task<decimal> CalculateOrderTotalPriceAsync(long orderId)
+        public async Task CalculateOrderTotalPriceAsync(long orderId, long userId)
         {
             var order = await _orderRepository.GetEntitiesQuery()
                 .Include(o => o.OrderDetails)
                 .ThenInclude(d => d.Product)
+                .ThenInclude(p => p.ProductSelectedCategories)
                 .Include(o => o.OffCode)
+                    .ThenInclude(oc => oc.UserOffCodes)
                 .SingleOrDefaultAsync(o => o.Id == orderId && !o.IsDelete);
 
-            if (order == null) return 0m;
 
             decimal subtotal = 0m;
+            decimal discountAmount = 0m;
+
             foreach (var detail in order.OrderDetails.Where(d => !d.IsDelete))
             {
-                subtotal += detail.Price * detail.Count;
-            }
-            if (order.OffCode != null)
-            {
-                // بررسی محدودیت تاریخ و استفاده
-                if (order.OffCode.ExpireDate >= DateTime.Now &&
-                    (order.OffCode.MaxUsageCount == null || order.OffCode.UsedCount < order.OffCode.MaxUsageCount))
+                decimal productTotal = detail.Price * detail.Count;
+                subtotal += productTotal;
+
+                if (order.OffCode != null)
                 {
-                    subtotal -= subtotal * (order.OffCode.DiscountPercentage / 100);
+                    // بررسی اعتبار کلی کد تخفیف
+                    bool isOffCodeValid = order.OffCode.ExpireDate >= DateTime.Now &&
+                                          (order.OffCode.MaxUsageCount == null || order.OffCode.UsedCount < order.OffCode.MaxUsageCount);
+
+                    // بررسی اختصاص کد به کاربران خاص
+                    bool canUseForUser = !order.OffCode.UserOffCodes.Any() ||
+                                         order.OffCode.UserOffCodes.Any(u => u.UserId == userId);
+
+                    // بررسی محدودیت محصول/دسته‌بندی
+                    bool hasProductRestriction = order.OffCode.OffCodeProducts.Any() || order.OffCode.OffCodeCategories.Any();
+                    bool canApply = !hasProductRestriction ||
+                                    order.OffCode.OffCodeProducts.Any(p => p.ProductId == detail.ProductId) ||
+                                    order.OffCode.OffCodeCategories.Any(c => detail.Product.ProductSelectedCategories.Any(pc => pc.ProductCategoriesId == c.CategoryId));
+
+                    if (isOffCodeValid && canUseForUser && canApply)
+                    {
+                        discountAmount += productTotal * (order.OffCode.DiscountPercentage / 100);
+                    }
                 }
             }
 
-            return subtotal;
+            order.Subtotal = subtotal;
+            order.DiscountAmount = discountAmount;
+            order.TotalPrice = subtotal - discountAmount;
+
+            _orderRepository.UpdateEntity(order);
+            await _orderRepository.SaveChanges();
         }
+
+
         #endregion
 
         #region Order Detail
@@ -145,7 +172,7 @@ namespace DidMark.Core.Services.Implementations
             }
 
             var order = await GetUserOpenOrderAsync(userId);
-            if (count > 1) count = 1;
+            //if (count > 1) count = 1;
 
             var detail = await _orderDetailRepository.GetEntitiesQuery()
                 .SingleOrDefaultAsync(d => d.OrderId == order.Id && d.ProductId == productId && !d.IsDelete);
@@ -189,8 +216,8 @@ namespace DidMark.Core.Services.Implementations
 
             // ارسال پیامک با جزئیات سفارش
             var basketDetails = await GetUserBasketDetailsAsync(userId);
-            var totalPrice = await CalculateOrderTotalPriceAsync(order.Id);
-            await _smsService.SendOrderSummarySmsAsync(user.PhoneNumber, basketDetails, totalPrice);
+            await CalculateOrderTotalPriceAsync(order.Id, order.UserId);
+            await _smsService.SendOrderSummarySmsAsync(user.PhoneNumber, basketDetails, order.TotalPrice);
         }
 
         public async Task<List<OrderDetailsDto>> GetOrderDetailsAsync(long orderId)
@@ -237,12 +264,14 @@ namespace DidMark.Core.Services.Implementations
         public async Task DeleteOrderDetailsAsync(long detailId)
         {
             var detail = await _orderDetailRepository.GetEntitiesQuery()
+                .Include(d => d.Order)
                 .SingleOrDefaultAsync(d => d.Id == detailId && !d.IsDelete);
 
             if (detail != null)
             {
                 _orderDetailRepository.RemoveEntity(detail);
                 await _orderDetailRepository.SaveChanges();
+                await CalculateOrderTotalPriceAsync(detail.OrderId, detail.Order.UserId);
             }
         }
         #endregion
@@ -301,6 +330,26 @@ namespace DidMark.Core.Services.Implementations
             await _offCodeService.IncreaseUsageAsync(order.OffCodeId.Value, userId);
         }
 
+        #endregion
+        #region Payment Status
+        /// <summary>
+        /// آپدیت وضعیت پرداخت سفارش
+        /// </summary>
+        /// <param name="orderId">شناسه سفارش</param>
+        /// <param name="refId">شماره پیگیری پرداخت</param>
+        public async Task<bool> MarkOrderAsPaidAsync(long orderId, long refId)
+        {
+            var order = await _orderRepository.GetEntityById(orderId);
+            if (order == null) return false;
+
+            order.IsPay = true;
+            order.PaymentDate = DateTime.Now;
+            order.PaymentRefId = refId; // اگر فیلدی برای RefId پرداخت داری
+
+            _orderRepository.UpdateEntity(order);
+            await _orderRepository.SaveChanges();
+            return true;
+        }
         #endregion
 
         #region Dispose

@@ -11,7 +11,7 @@ namespace DidMark.Core.Services.Interfaces
         #region Order
         Task<Order> CreateOrderUserAsync(long userId);
         Task<Order> GetUserOpenOrderAsync(long userId);
-        Task<decimal> CalculateOrderTotalPriceAsync(long orderId);
+        Task CalculateOrderTotalPriceAsync(long orderId, long userId);
         #endregion
 
         #region Order Detail
@@ -26,5 +26,10 @@ namespace DidMark.Core.Services.Interfaces
         Task IncreaseOffCodeUsageAsync(long orderId, long userId);
 
         #endregion
+        #region Payment Status
+
+        Task<bool> MarkOrderAsPaidAsync(long orderId, long refId);
+        #endregion
+
     }
 }

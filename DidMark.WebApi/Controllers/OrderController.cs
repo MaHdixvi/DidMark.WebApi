@@ -27,13 +27,6 @@ namespace DidMark.WebApi.Controllers
             return User.GetUserId();
         }
 
-        private async Task<(Order order, decimal totalPrice)> GetUserOrderWithTotal(long userId)
-        {
-            var order = await _orderService.GetUserOpenOrderAsync(userId);
-            decimal totalPrice = order != null ? await _orderService.CalculateOrderTotalPriceAsync(order.Id) : 0m;
-            return (order, totalPrice);
-        }
-
         [HttpPost("add-order")]
         public async Task<IActionResult> AddProductToOrder([FromQuery] long productId, [FromQuery] int count)
         {
@@ -47,7 +40,7 @@ namespace DidMark.WebApi.Controllers
                 await _orderService.AddProductToOrderAsync(userId, productId, count);
 
                 var basketDetails = await _orderService.GetUserBasketDetailsAsync(userId);
-                var (_, totalPrice) = await GetUserOrderWithTotal(userId);
+                var order = await _orderService.GetUserOpenOrderAsync(userId);
 
                 return JsonResponseStatus.Success(new
                 {
@@ -55,7 +48,9 @@ namespace DidMark.WebApi.Controllers
                     data = new
                     {
                         items = basketDetails,
-                        totalPrice
+                        order.Subtotal,
+                        order.DiscountAmount,
+                        order.TotalPrice
                     }
                 });
             }
@@ -77,12 +72,14 @@ namespace DidMark.WebApi.Controllers
                 var userId = GetCurrentUserId();
 
                 var basketDetails = await _orderService.GetUserBasketDetailsAsync(userId);
-                var (_, totalPrice) = await GetUserOrderWithTotal(userId);
+                var order = await _orderService.GetUserOpenOrderAsync(userId);
 
                 return JsonResponseStatus.Success(new
                 {
                     items = basketDetails,
-                    totalPrice
+                    order.Subtotal,
+                    order.DiscountAmount,
+                    order.TotalPrice
                 });
             }
             catch (UnauthorizedAccessException ex)
@@ -110,7 +107,6 @@ namespace DidMark.WebApi.Controllers
 
                 // مجدداً سبد خرید و قیمت کل را بعد از حذف دریافت می‌کنیم
                 var basketDetails = await _orderService.GetUserBasketDetailsAsync(userId);
-                var (_, totalPrice) = await GetUserOrderWithTotal(userId);
 
                 return JsonResponseStatus.Success(new
                 {
@@ -118,7 +114,9 @@ namespace DidMark.WebApi.Controllers
                     data = new
                     {
                         items = basketDetails,
-                        totalPrice
+                        order.Subtotal,
+                        order.DiscountAmount,
+                        order.TotalPrice
                     }
                 });
             }

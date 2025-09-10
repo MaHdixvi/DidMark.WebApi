@@ -1,4 +1,5 @@
 ﻿using DidMark.Core.DTO.Account;
+using DidMark.Core.DTO.User;
 using DidMark.Core.DTO.Users;
 using DidMark.Core.Security;
 using DidMark.Core.Services.Interfaces;
@@ -44,9 +45,22 @@ namespace DidMark.Core.Services.Implementations
 
         }
 
-        public async Task<List<User>> GetAllUsersAsync()
+        public async Task<List<UserDto>> GetAllUsersAsync()
         {
-            return await _userRepository.GetEntitiesQuery().ToListAsync();
+            return await _userRepository.GetEntitiesQuery()
+                .Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    Username = u.Username,
+                    Email = u.Email,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    PhoneNumber = u.PhoneNumber,
+                    IsActivated = u.IsActivated,
+                    IsEmailActivated = u.IsEmailActivated,
+                    IsPhoneActivated = u.IsPhoneActivated
+                })
+                .ToListAsync();
         }
 
         public async Task<RegisterUserResult> RegisterUserAsync(RegisterUserDTO register)
@@ -151,9 +165,25 @@ var user = await _userRepository.GetEntitiesQuery()
                 .SingleOrDefaultAsync(s => s.Username.ToLower().Trim() == username.ToLower().Trim());
         }
 
-        public async Task<User?> GetUserByIdAsync(long userId)
+        public async Task<UserDto?> GetUserByIdAsync(long userId)
         {
-            return await _userRepository.GetEntityById(userId);
+            var user = await _userRepository.GetEntityById(userId);
+
+            if (user == null)
+                return null;
+
+            return new UserDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PhoneNumber = user.PhoneNumber,
+                IsActivated = user.IsActivated,
+                IsEmailActivated = user.IsEmailActivated,
+                IsPhoneActivated = user.IsPhoneActivated
+            };
         }
 
         public async Task<bool> ActivateUserAsync(User user)
