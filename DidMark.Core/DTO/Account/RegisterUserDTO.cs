@@ -36,7 +36,6 @@ namespace DidMark.Core.DTO.Account
     public enum RegisterUserResult
     {
         Success,
-        EmailExists,
         PhoneNumberExists,
         UsernameExists,
     }

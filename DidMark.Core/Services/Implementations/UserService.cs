@@ -133,11 +133,13 @@ namespace DidMark.Core.Services.Implementations
             }
             var password = _passwordHelper.EncodePasswordMd5(login.Password);
 
-var user = await _userRepository.GetEntitiesQuery()
-    .FirstOrDefaultAsync(s =>
-        ((login.PhoneNumber != null && s.PhoneNumber == login.PhoneNumber) ||
-        (login.Username != null && s.Username == login.Username)) &&
-        s.Password == password);
+            var user = await _userRepository.GetEntitiesQuery()
+                .FirstOrDefaultAsync(s =>
+                    ((login.Username != null && login.PhoneNumber != null && s.Username == login.Username && s.PhoneNumber == login.PhoneNumber) // هر دو وارد شده و باید درست باشند
+                     || (login.Username != null && login.PhoneNumber == null && s.Username == login.Username) // فقط یوزرنیم وارد شده
+                     || (login.Username == null && login.PhoneNumber != null && s.PhoneNumber == login.PhoneNumber)) // فقط شماره وارد شده
+                    && s.Password == password);
+
 
             if (user == null)
                 return LoginUserResult.IncorrectData;
@@ -221,7 +223,7 @@ var user = await _userRepository.GetEntitiesQuery()
         public async Task<User?> GetUserByEmailActivationCodeAsync(string activationCode)
         {
             return await _userRepository.GetEntitiesQuery()
-                .SingleOrDefaultAsync(s => s.Email == activationCode);
+                .SingleOrDefaultAsync(s => s.EmailActiveCode == activationCode);
         }
 
         public async Task<EditUserResult> UpdateUserAsync(EditUserDTO user, long userId)
@@ -364,24 +366,23 @@ var user = await _userRepository.GetEntitiesQuery()
         }
 
 
-        public async Task<bool> SendEmailActivationSmsAsync(SendEmailActivationSmsDto dto)
+        public async Task<bool> SendEmailActivationSmsAsync(long userId)
         {
-            if (dto.Email == null)
+            var user = await _userRepository.GetEntityById(userId);
+            if (user == null)
                 return false;
-            var user = await GetUserByEmailAsync(dto.Email);
             var body = await _viewRenderService.RenderToStringAsync("Email/ActivateAccount", user);
-            _mailSender.Send(dto.Email, "Activate Your Account", body);
+            _mailSender.Send(user.Email, "Activate Your Account", body);
             return true;
         }
 
-        public async Task<bool> SendPhoneNumberActivationSmsAsync(SendPhoneNumberActivationSmsDto dto)
+        public async Task<bool> SendPhoneNumberActivationSmsAsync(long userId)
         {
-            if (dto.PhoneNumber == null)
+            var user = await _userRepository.GetEntityById(userId);
+            if (user == null)
                 return false;
 
-            var user = await GetUserByPhoneNumberAsync(dto.PhoneNumber);
-
-            _smsService.SendActivationCodeSmsAsync(dto.PhoneNumber, "https://localhost:4200/ActivateAccount/" + user.PhoneActiveCode);
+            _smsService.SendActivationCodeSmsAsync(user.PhoneNumber, "https://localhost:4200/ActivateAccount/" + user.PhoneActiveCode);
 
             return true;
         }

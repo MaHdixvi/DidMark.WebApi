@@ -30,8 +30,8 @@ namespace DidMark.Core.Services.Interfaces
         Task<bool> ToggleStatusAsync(long userId);
         Task<EditUserByAdminResult> UpdateUserByAdminAsync(EditUserByAdminDTO dto);
         Task<bool> ActivateUserEmailAsync(User user);
-        Task<bool> SendEmailActivationSmsAsync(SendEmailActivationSmsDto dto);
-        Task<bool> SendPhoneNumberActivationSmsAsync(SendPhoneNumberActivationSmsDto dto);
+        Task<bool> SendEmailActivationSmsAsync(long userId);
+        Task<bool> SendPhoneNumberActivationSmsAsync(long userId);
 
     }
 }

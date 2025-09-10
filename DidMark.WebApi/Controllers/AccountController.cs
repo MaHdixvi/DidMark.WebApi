@@ -5,6 +5,7 @@ using DidMark.Core.Utilities.Common;
 using DidMark.Core.Utilities.Enums;
 using DidMark.Core.Utilities.Extensions.Identity;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
@@ -34,7 +35,7 @@ namespace DidMark.WebApi.Controllers
 
             return result switch
             {
-                RegisterUserResult.EmailExists => JsonResponseStatus.Conflict(new { message = "ایمیل قبلاً ثبت شده است" }),
+                RegisterUserResult.UsernameExists => JsonResponseStatus.Conflict(new { message = "نام کاربری قبلاً ثبت شده است" }),
                 RegisterUserResult.PhoneNumberExists => JsonResponseStatus.Conflict(new { message = "شماره تلفن قبلاً ثبت شده است" }),
                 RegisterUserResult.Success => JsonResponseStatus.Created(new { message = "ثبت‌نام با موفقیت انجام شد. لطفاً ایمیل خود را بررسی کنید." }),
                 _ => JsonResponseStatus.Error(new { message = "خطای ناشناخته در ثبت‌نام" })
@@ -192,7 +193,7 @@ namespace DidMark.WebApi.Controllers
                 _ => JsonResponseStatus.Error(new { message = "خطا در تغییر رمز عبور" })
             };
         }
-        [HttpPost("activate-email")]
+        [HttpPost("activate-email/{activationCode}")]
         public async Task<IActionResult> ActivateEmail(string activationCode)
         {
             if (string.IsNullOrEmpty(activationCode))
@@ -211,31 +212,34 @@ namespace DidMark.WebApi.Controllers
                 ? JsonResponseStatus.Success(new { message = "ایمیل با موفقیت فعال شد" })
                 : JsonResponseStatus.Error(new { message = "خطا در فعال‌سازی ایمیل" });
         }
+        [Authorize]
 
         [HttpPost("send-email-activation")]
-        public async Task<IActionResult> SendEmailActivation([FromBody] SendEmailActivationSmsDto dto)
+        public async Task<IActionResult> SendEmailActivation()
         {
             if (!ModelState.IsValid)
             {
                 return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
             }
+            var userId = User.GetUserId();
 
-            var result = await _userService.SendEmailActivationSmsAsync(dto);
+            var result = await _userService.SendEmailActivationSmsAsync(userId);
 
             return result
                 ? JsonResponseStatus.Success(new { message = "کد فعال‌سازی به ایمیل ارسال شد" })
                 : JsonResponseStatus.Error(new { message = "خطا در ارسال کد فعال‌سازی ایمیل" });
         }
-
+        [Authorize]
         [HttpPost("send-phone-activation")]
-        public async Task<IActionResult> SendPhoneActivation([FromBody] SendPhoneNumberActivationSmsDto dto)
+        public async Task<IActionResult> SendPhoneActivation()
         {
             if (!ModelState.IsValid)
             {
                 return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
             }
+            var userId = User.GetUserId();
 
-            var result = await _userService.SendPhoneNumberActivationSmsAsync(dto);
+            var result = await _userService.SendPhoneNumberActivationSmsAsync(userId);
 
             return result
                 ? JsonResponseStatus.Success(new { message = "کد فعال‌سازی به شماره تلفن ارسال شد" })
