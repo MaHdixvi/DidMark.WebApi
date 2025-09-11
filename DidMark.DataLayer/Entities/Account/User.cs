@@ -68,6 +68,12 @@ namespace DidMark.DataLayer.Entities.Account
 
         public bool IsPhoneActivated { get; set; }
 
+        [Display(Name = "کد بازیابی رمز عبور")]
+        [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
+        public string? ResetPasswordCode { get; set; }
+
+        [Display(Name = "تاریخ انقضای کد بازیابی")]
+        public DateTime? ResetPasswordExpireDate { get; set; }
 
 
         #endregion

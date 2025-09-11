@@ -396,5 +396,76 @@ namespace DidMark.Core.Services.Implementations
             _userRoleRepository?.Dispose();
             _disposed = true;
         }
+
+        public async Task<ForgotPasswordResult> ForgotPasswordAsync(ForgotPasswordDTO forgotPassword)
+        {
+            User? user = null;
+
+            if (string.IsNullOrEmpty(forgotPassword.UsernameOrPhone))
+                return ForgotPasswordResult.UserNotFound;
+
+            if (forgotPassword.UsernameOrPhone.Contains("@"))
+            {
+                // یعنی ورودی ایمیل هست
+                user = await GetUserByEmailAsync(forgotPassword.UsernameOrPhone);
+            }
+            else
+            {
+                // فرض می‌کنیم ورودی شماره تلفنه
+                user = await GetUserByPhoneNumberAsync(forgotPassword.UsernameOrPhone);
+            }
+
+            if (user == null)
+                return ForgotPasswordResult.UserNotFound;
+
+            // ساخت کد بازیابی
+            user.ResetPasswordCode = Guid.NewGuid().ToString("N");
+            user.ResetPasswordExpireDate = DateTime.Now.AddMinutes(15);
+
+            _userRepository.UpdateEntity(user);
+            await _userRepository.SaveChanges();
+
+            // ارسال به ایمیل
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                var body = await _viewRenderService.RenderToStringAsync("Email/ForgotPassword", user);
+                _mailSender.Send(user.Email, "Reset Password", body);
+            }
+
+            // ارسال به شماره
+            if (!string.IsNullOrEmpty(user.PhoneNumber))
+            {
+                await _smsService.SendForgotPasswordCodeSmsAsync(user.PhoneNumber, user.ResetPasswordCode);
+            }
+
+            return ForgotPasswordResult.Success;
+        }
+
+
+
+        public async Task<ResetPasswordResult> ResetPasswordAsync(ResetPasswordDTO resetPassword)
+        {
+            var user = await _userRepository.GetEntitiesQuery()
+                .FirstOrDefaultAsync(u => u.ResetPasswordCode == resetPassword.ResetCode);
+
+            if (user == null)
+                return ResetPasswordResult.InvalidToken;
+
+            if (user.ResetPasswordExpireDate < DateTime.Now)
+                return ResetPasswordResult.ExpiredToken;
+
+            if (resetPassword.NewPassword != resetPassword.ConfirmPassword)
+                return ResetPasswordResult.NotSameNewPasswordAndConfirmPassword;
+
+            user.Password = _passwordHelper.EncodePasswordMd5(resetPassword.NewPassword);
+            user.ResetPasswordCode = null; // بعد از استفاده باطل بشه
+            user.ResetPasswordExpireDate = null;
+
+            _userRepository.UpdateEntity(user);
+            await _userRepository.SaveChanges();
+
+            return ResetPasswordResult.Success;
+        }
+
     }
 }

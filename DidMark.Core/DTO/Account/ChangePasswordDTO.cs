@@ -12,4 +12,15 @@ namespace DidMark.Core.DTO.Account
         public string NewPassword { get; set; }
         public string ConfirmPassword { get; set; }
     }
+    public class ForgotPasswordDTO
+    {
+        public string UsernameOrPhone { get; set; } = string.Empty;
+    }
+
+    public class ResetPasswordDTO
+    {
+        public string ResetCode { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
 }

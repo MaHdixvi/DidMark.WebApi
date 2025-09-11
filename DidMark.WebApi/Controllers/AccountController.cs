@@ -245,6 +245,42 @@ namespace DidMark.WebApi.Controllers
                 ? JsonResponseStatus.Success(new { message = "کد فعال‌سازی به شماره تلفن ارسال شد" })
                 : JsonResponseStatus.Error(new { message = "خطا در ارسال کد فعال‌سازی شماره تلفن" });
         }
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO forgotPassword)
+        {
+            if (!ModelState.IsValid)
+            {
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
+            }
+
+            var result = await _userService.ForgotPasswordAsync(forgotPassword);
+
+            return result switch
+            {
+                ForgotPasswordResult.UserNotFound => JsonResponseStatus.NotFound(new { message = "کاربری با این اطلاعات یافت نشد" }),
+                ForgotPasswordResult.Success => JsonResponseStatus.Success(new { message = "کد بازیابی رمز عبور ارسال شد" }),
+                _ => JsonResponseStatus.Error(new { message = "خطا در ارسال کد بازیابی رمز عبور" })
+            };
+        }
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO resetPassword)
+        {
+            if (!ModelState.IsValid)
+            {
+                return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
+            }
+
+            var result = await _userService.ResetPasswordAsync(resetPassword);
+
+            return result switch
+            {
+                ResetPasswordResult.InvalidToken => JsonResponseStatus.BadRequest(new { message = "کد بازیابی نامعتبر است" }),
+                ResetPasswordResult.ExpiredToken => JsonResponseStatus.BadRequest(new { message = "کد بازیابی منقضی شده است" }),
+                ResetPasswordResult.Success => JsonResponseStatus.Success(new { message = "رمز عبور با موفقیت تغییر یافت" }),
+                _ => JsonResponseStatus.Error(new { message = "خطا در تغییر رمز عبور" })
+            };
+        }
+
 
     }
 }
