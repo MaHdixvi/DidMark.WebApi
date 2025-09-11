@@ -418,8 +418,9 @@ namespace DidMark.Core.Services.Implementations
             if (user == null)
                 return ForgotPasswordResult.UserNotFound;
 
-            // ساخت کد بازیابی
-            user.ResetPasswordCode = Guid.NewGuid().ToString("N");
+            // ساخت کد بازیابی 4 رقمی
+            var random = new Random();
+            user.ResetPasswordCode = random.Next(1000, 10000).ToString(); // تولید عدد 1000 تا 9999
             user.ResetPasswordExpireDate = DateTime.Now.AddMinutes(15);
 
             _userRepository.UpdateEntity(user);
@@ -440,6 +441,7 @@ namespace DidMark.Core.Services.Implementations
 
             return ForgotPasswordResult.Success;
         }
+
 
 
 
