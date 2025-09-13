@@ -32,6 +32,10 @@ namespace DidMark.Core.Services.Interfaces
         Task<bool> ActivateUserEmailAsync(User user);
         Task<bool> SendEmailActivationSmsAsync(long userId);
         Task<bool> SendPhoneNumberActivationSmsAsync(long userId);
+        Task<ForgotPasswordResult> ForgotPasswordAsync(ForgotPasswordDTO forgotPassword);
+        Task<ResetPasswordResult> ResetPasswordAsync(ResetPasswordDTO resetPassword);
+
+
 
     }
 }

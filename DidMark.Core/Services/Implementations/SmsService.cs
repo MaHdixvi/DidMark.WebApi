@@ -190,6 +190,12 @@ namespace DidMark.Core.Services.Implementations
 
         }
 
+        public async Task<bool> SendForgotPasswordCodeSmsAsync(string phoneNumber, string resetCode)
+        {
+            var message = $"کد بازیابی رمز عبور شما: {resetCode}\nاین کد تا ۳۰ دقیقه آینده معتبر است.";
+            return await SendSmsAsync(phoneNumber, message);
+        }
+
     }
 
 }

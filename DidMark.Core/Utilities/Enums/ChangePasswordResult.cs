@@ -15,4 +15,21 @@ namespace DidMark.Core.Utilities.Enums
         UserNotFound,
         Error
     }
+    public enum ForgotPasswordResult
+    {
+        Success,
+        UserNotFound,
+        EmailNotConfirmed,
+        SmsNotSent,
+        Error
+    }
+    public enum ResetPasswordResult
+    {
+        Success,
+        UserNotFound,
+        InvalidToken,
+        ExpiredToken,
+        NotSameNewPasswordAndConfirmPassword,
+        Error
+    }
 }
