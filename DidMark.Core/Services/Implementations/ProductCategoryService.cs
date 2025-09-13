@@ -43,6 +43,20 @@ namespace DidMark.Core.Services.Implementations
                .ToListAsync();
         }
 
+        public async Task<List<AdminProductCategoryDTO>> GetAllCategories()
+        {
+            return await _categoryRepo.GetEntitiesQuery()
+               .Select(c => new AdminProductCategoryDTO
+               {
+                   Id = c.Id,
+                   Title = c.Title,
+                   UrlTitle = c.UrlTitle,
+                   ParentId = c.ParentId,
+                   IsDelete = c.IsDelete
+               })
+               .ToListAsync();
+        }
+
         public async Task<ProductCategoryDTO> GetCategoryById(long id)
         {
             return await _categoryRepo.GetEntitiesQuery()

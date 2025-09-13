@@ -83,7 +83,7 @@ namespace DidMark.Core.Services.Implementations
                 var productAttributes = productDto.Attributes.Select(a => new ProductAttribute
                 {
                     ProductId = product.Id,
-                    PAttributeId = a.AttributeId,
+                    PAttributeId = a.PAttributeId,
                     Value = a.Value
                 }).ToList();
 
@@ -147,7 +147,7 @@ namespace DidMark.Core.Services.Implementations
                 var newAttributes = productDto.Attributes.Select(a => new ProductAttribute
                 {
                     ProductId = product.Id,
-                    PAttributeId = a.AttributeId,
+                    PAttributeId = a.PAttributeId,
                     Value = a.Value
                 }).ToList();
 
@@ -304,7 +304,8 @@ namespace DidMark.Core.Services.Implementations
                 Attributes = product.Attributes.Select(pa => new EditProductAttributeDto
                 {
                     Value = pa.Value,
-                    AttributeId = pa.PAttributeId
+                    PAttributeId = pa.PAttributeId,
+                    ProductId = product.Id
                 }).ToList()
             };
         }

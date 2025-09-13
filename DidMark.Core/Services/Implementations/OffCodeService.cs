@@ -162,7 +162,8 @@ namespace DidMark.Core.Services.Implementations
                     {
                         Id = cat.CategoryId,
                         Title = cat.Category.Title
-                    }).ToList()
+                    }).ToList(),
+                    IsDelete = c.IsDelete
                 })
                 .ToListAsync();
         }

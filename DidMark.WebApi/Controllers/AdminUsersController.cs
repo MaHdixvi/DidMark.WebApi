@@ -97,9 +97,15 @@ namespace DidMark.WebApi.Controllers
             if (dto == null) return JsonResponseStatus.BadRequest(new { message = "اطلاعات ارسال نشده است" });
 
             var result = await _roleService.AssignRoleToUserAsync(dto);
-            if (!result) return JsonResponseStatus.BadRequest(new { message = "نقش قبلا به کاربر اختصاص داده شده است" });
 
-            return JsonResponseStatus.Success(new { message = "نقش به کاربر اختصاص یافت" });
+
+            return result switch
+            {
+                UserRoleAssignResult.Success => JsonResponseStatus.Success(new { message = "نقش به کاربر اختصاص یافت" }),
+                UserRoleAssignResult.Notfound => JsonResponseStatus.BadRequest(new { message = "نقش یا کاربر پیدا نشدند" }),
+                UserRoleAssignResult.AlreadyHasRole => JsonResponseStatus.BadRequest(new { message = "نقش قبلا به کاربر اختصاص داده شده است" }),
+                _ => JsonResponseStatus.Error(new { message = "خطا در اختصاص دادن نقش کاربر" })
+            };
         }
 
         [HttpPost("user-roles/remove")]
@@ -109,9 +115,14 @@ namespace DidMark.WebApi.Controllers
             if (dto == null) return JsonResponseStatus.BadRequest(new { message = "اطلاعات ارسال نشده است" });
 
             var result = await _roleService.RemoveRoleFromUserAsync(dto);
-            if (!result) return JsonResponseStatus.BadRequest(new { message = "نقش به کاربر اختصاص داده نشده بود" });
 
-            return JsonResponseStatus.Success(new { message = "نقش از کاربر حذف شد" });
+            return result switch
+            {
+                UserRoleRemoveResult.Success => JsonResponseStatus.Success(new { message = "نقش از کاربر حذف شد" }),
+                UserRoleRemoveResult.Notfound => JsonResponseStatus.BadRequest(new { message = "نقش یا کاربر پیدا نشدند" }),
+                UserRoleRemoveResult.DoesNotHaveRole => JsonResponseStatus.BadRequest(new { message = "نقش به کاربر اختصاص داده نشده بود" }),
+                _ => JsonResponseStatus.Error(new { message = "خطا در حذف نقش کاربر" })
+            };
         }
 
         [HttpGet("user-roles/{userId:long}")]

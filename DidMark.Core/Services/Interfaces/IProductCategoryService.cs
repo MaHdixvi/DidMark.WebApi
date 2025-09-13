@@ -10,6 +10,7 @@ namespace DidMark.Core.Services.Interfaces
     {
         // ProductCategories CRUD
         Task<List<ProductCategoryDTO>> GetAllActiveCategories();
+        Task<List<AdminProductCategoryDTO>> GetAllCategories();
         Task<ProductCategoryDTO> GetCategoryById(long id);
         Task AddCategory(AddProductCategoryDTO dto);
         Task UpdateCategory(EditProductCategoryDTO dto);

@@ -26,7 +26,7 @@ namespace DidMark.WebApi.Controllers
         [PermissionChecker("Admin")]
         public async Task<IActionResult> GetAll()
         {
-            var categories = await _categoryService.GetAllActiveCategories();
+            var categories = await _categoryService.GetAllCategories();
             return JsonResponseStatus.Success(categories);
         }
 

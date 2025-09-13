@@ -104,13 +104,20 @@ namespace DidMark.Core.Services.Implementations
         }
 
         // اختصاص نقش به کاربر
-        public async Task<bool> AssignRoleToUserAsync(UserRoleAssignDTO dto)
+        public async Task<UserRoleAssignResult> AssignRoleToUserAsync(UserRoleAssignDTO dto)
         {
+            var hasUser = _userRepository.GetEntitiesQuery().Any(x => x.Id == dto.UserId);
+            var hasRole = _roleRepository.GetEntitiesQuery().Any(x => x.Id == dto.RoleId);
+            if (!hasUser||!hasRole)
+            {
+                return UserRoleAssignResult.Notfound;
+            }
+
             var exists = await _userRoleRepository.GetEntitiesQuery()
                 .Where(x => !x.IsDelete)
-                .AnyAsync(x => x.UserId == dto.UserId && x.RoleId == dto.RoleId);
+                .SingleOrDefaultAsync(x => x.UserId == dto.UserId && x.RoleId == dto.RoleId);
 
-            if (exists) return false;
+            if (exists != null) return UserRoleAssignResult.AlreadyHasRole;
 
             var userRole = new UserRole
             {
@@ -120,21 +127,28 @@ namespace DidMark.Core.Services.Implementations
 
             await _userRoleRepository.AddEntity(userRole);
             await _userRoleRepository.SaveChanges();
-            return true;
+            return UserRoleAssignResult.Success;
         }
 
         // حذف نقش از کاربر
-        public async Task<bool> RemoveRoleFromUserAsync(UserRoleAssignDTO dto)
+        public async Task<UserRoleRemoveResult> RemoveRoleFromUserAsync(UserRoleAssignDTO dto)
         {
+            var hasUser = _userRepository.GetEntitiesQuery().Any(x => x.Id == dto.UserId);
+            var hasRole = _roleRepository.GetEntitiesQuery().Any(x => x.Id == dto.RoleId);
+            if (!hasUser || !hasRole)
+            {
+                return UserRoleRemoveResult.Notfound;
+            }
+
             var userRole = await _userRoleRepository.GetEntitiesQuery()
                 .Where(x => !x.IsDelete)
                 .SingleOrDefaultAsync(x => x.UserId == dto.UserId && x.RoleId == dto.RoleId);
 
-            if (userRole == null) return false;
+            if (userRole == null) return UserRoleRemoveResult.DoesNotHaveRole;
 
             _userRoleRepository.RemoveEntity(userRole);
             await _userRoleRepository.SaveChanges();
-            return true;
+            return UserRoleRemoveResult.Success;
         }
 
         // گرفتن همه نقش‌های کاربر

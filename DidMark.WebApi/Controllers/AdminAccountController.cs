@@ -44,7 +44,9 @@ namespace DidMark.WebApi.Controllers
                     return JsonResponseStatus.Forbidden(new { message = "شما دسترسی ادمین ندارید" });
 
                 case LoginUserResult.Success:
-                    var user = await _userService.GetUserByPhoneNumberAsync(login.PhoneNumber);
+                    var user = !string.IsNullOrEmpty(login.PhoneNumber)
+                        ? await _userService.GetUserByPhoneNumberAsync(login.PhoneNumber)
+                        : await _userService.GetUserByUsernameAsync(login.Username); 
                     if (user == null)
                     {
                         return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });

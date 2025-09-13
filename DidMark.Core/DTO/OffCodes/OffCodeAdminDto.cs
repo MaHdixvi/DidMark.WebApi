@@ -15,6 +15,7 @@ namespace DidMark.Core.DTO.OffCodes
         public int? MaxUsageCount { get; set; }
         public int UsedCount { get; set; }
         public bool IsActive => ExpireDate >= DateTime.Now && (MaxUsageCount == null || UsedCount < MaxUsageCount);
+        public bool IsDelete { get; set; }
         public long? UserId { get; set; }
 
 

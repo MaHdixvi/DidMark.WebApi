@@ -8,7 +8,8 @@ namespace DidMark.Core.DTO.Products
 {
     public class CreateProductAttributeDto
     {
-        public long AttributeId { get; set; }
+        public long ProductId { get; set; }
+        public long PAttributeId { get; set; }
         public string Value { get; set; }
     }
 }

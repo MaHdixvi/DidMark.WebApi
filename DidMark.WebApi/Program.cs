@@ -89,6 +89,7 @@ builder.Services.AddScoped<IOffCodeService, OffCodeService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<ITransactionLogService, TransactionLogService>();
 builder.Services.AddScoped<IZarinPalService, ZarinPalService>();
+builder.Services.AddScoped<IAttributeService, AttributeService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMvc();

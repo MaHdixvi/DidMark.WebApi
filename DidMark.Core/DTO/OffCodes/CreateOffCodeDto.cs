@@ -12,7 +12,6 @@ namespace DidMark.Core.DTO.OffCodes
         public int DiscountPercentage { get; set; }
         public DateTime ExpireDate { get; set; }
         public int? MaxUsageCount { get; set; }
-        public long? UserId { get; set; } // اگر به کاربر خاص اختصاص بدیم
     }
 
 }

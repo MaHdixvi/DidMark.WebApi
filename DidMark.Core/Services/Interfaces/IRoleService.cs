@@ -13,8 +13,8 @@ namespace DidMark.Core.Services.Interfaces
         Task<bool> EditRoleAsync(EditRoleDTO dto);
         Task<bool> DeleteRoleAsync(long roleId);
 
-        Task<bool> AssignRoleToUserAsync(UserRoleAssignDTO dto);
-        Task<bool> RemoveRoleFromUserAsync(UserRoleAssignDTO dto);
+        Task<UserRoleAssignResult> AssignRoleToUserAsync(UserRoleAssignDTO dto);
+        Task<UserRoleRemoveResult> RemoveRoleFromUserAsync(UserRoleAssignDTO dto);
         Task<List<string>> GetUserRolesAsync(long userId);
     }
 }
