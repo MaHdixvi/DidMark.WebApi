@@ -127,18 +127,24 @@ namespace DidMark.Core.Services.Implementations
 
         public async Task<LoginUserResult> LoginUserAsync(LoginUserDTO login, bool checkAdminRole = false)
         {
-            if (login.Username.IsNullOrEmpty()&&login.PhoneNumber.IsNullOrEmpty())
+            if (login.UsernameOrPhone.IsNullOrEmpty())
             {
                 return LoginUserResult.IncorrectData;
             }
             var password = _passwordHelper.EncodePasswordMd5(login.Password);
 
-            var user = await _userRepository.GetEntitiesQuery()
-                .FirstOrDefaultAsync(s =>
-                    ((login.Username != null && login.PhoneNumber != null && s.Username == login.Username && s.PhoneNumber == login.PhoneNumber) // هر دو وارد شده و باید درست باشند
-                     || (login.Username != null && login.PhoneNumber == null && s.Username == login.Username) // فقط یوزرنیم وارد شده
-                     || (login.Username == null && login.PhoneNumber != null && s.PhoneNumber == login.PhoneNumber)) // فقط شماره وارد شده
-                    && s.Password == password);
+            User user;
+            if (login.UsernameOrPhone.All(char.IsDigit))
+            {
+                user = await _userRepository.GetEntitiesQuery()
+    .SingleOrDefaultAsync(s => s.PhoneNumber == login.UsernameOrPhone && s.Password == password);
+            }
+            else
+            {
+                // یعنی ورودی نام کاربری هست
+                user = await _userRepository.GetEntitiesQuery()
+    .SingleOrDefaultAsync(s => s.Username == login.UsernameOrPhone && s.Password == password);
+            }
 
 
             if (user == null)
@@ -159,7 +165,7 @@ namespace DidMark.Core.Services.Implementations
         public async Task<User?> GetUserByPhoneNumberAsync(string phoneNumber)
         {
             return await _userRepository.GetEntitiesQuery()
-                .SingleOrDefaultAsync(s => s.PhoneNumber.ToLower().Trim() == phoneNumber.ToLower().Trim());
+                .SingleOrDefaultAsync(s => s.PhoneNumber.Trim() == phoneNumber.Trim());
         }
         public async Task<User?> GetUserByUsernameAsync(string username)
         {
@@ -404,15 +410,15 @@ namespace DidMark.Core.Services.Implementations
             if (string.IsNullOrEmpty(forgotPassword.UsernameOrPhone))
                 return ForgotPasswordResult.UserNotFound;
 
-            if (forgotPassword.UsernameOrPhone.Contains("@"))
+            if (forgotPassword.UsernameOrPhone.All(char.IsDigit))
             {
-                // یعنی ورودی ایمیل هست
-                user = await GetUserByEmailAsync(forgotPassword.UsernameOrPhone);
+                // یعنی ورودی شماره تلفنه
+                user = await GetUserByPhoneNumberAsync(forgotPassword.UsernameOrPhone);
             }
             else
             {
-                // فرض می‌کنیم ورودی شماره تلفنه
-                user = await GetUserByPhoneNumberAsync(forgotPassword.UsernameOrPhone);
+                // یعنی ورودی نام کاربری هست
+                user = await GetUserByUsernameAsync(forgotPassword.UsernameOrPhone);
             }
 
             if (user == null)
@@ -420,7 +426,7 @@ namespace DidMark.Core.Services.Implementations
 
             // ساخت کد بازیابی 4 رقمی
             var random = new Random();
-            user.ResetPasswordCode = random.Next(1000, 10000).ToString(); // تولید عدد 1000 تا 9999
+            user.ResetPasswordCode = random.Next(100000, 1000000).ToString(); // تولید عدد 1000 تا 9999
             user.ResetPasswordExpireDate = DateTime.Now.AddMinutes(15);
 
             _userRepository.UpdateEntity(user);
@@ -442,7 +448,16 @@ namespace DidMark.Core.Services.Implementations
             return ForgotPasswordResult.Success;
         }
 
+        public async Task<CheckResetCodeResult> CheckResetCodeAsync(string code)
+        {
+            var user = await _userRepository.GetEntitiesQuery()
+                .FirstOrDefaultAsync(u => u.ResetPasswordCode == code);
 
+            if (user == null) return CheckResetCodeResult.UserNotFound;
+            if (user.ResetPasswordExpireDate < DateTime.Now) return CheckResetCodeResult.ResetPasswordExpireDatePassed;
+
+            return CheckResetCodeResult.Success;
+        }
 
 
         public async Task<ResetPasswordResult> ResetPasswordAsync(ResetPasswordDTO resetPassword)
@@ -459,6 +474,8 @@ namespace DidMark.Core.Services.Implementations
             if (resetPassword.NewPassword != resetPassword.ConfirmPassword)
                 return ResetPasswordResult.NotSameNewPasswordAndConfirmPassword;
 
+            if (user.Password == _passwordHelper.EncodePasswordMd5(resetPassword.NewPassword))
+                return ResetPasswordResult.SameAsOldPassword;
             user.Password = _passwordHelper.EncodePasswordMd5(resetPassword.NewPassword);
             user.ResetPasswordCode = null; // بعد از استفاده باطل بشه
             user.ResetPasswordExpireDate = null;

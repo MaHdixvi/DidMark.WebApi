@@ -15,6 +15,12 @@ namespace DidMark.Core.Utilities.Enums
         UserNotFound,
         Error
     }
+    public enum CheckResetCodeResult
+    {
+        Success,
+        ResetPasswordExpireDatePassed,
+        UserNotFound
+    }
     public enum ForgotPasswordResult
     {
         Success,
@@ -30,6 +36,7 @@ namespace DidMark.Core.Utilities.Enums
         InvalidToken,
         ExpiredToken,
         NotSameNewPasswordAndConfirmPassword,
+        SameAsOldPassword,
         Error
     }
 }

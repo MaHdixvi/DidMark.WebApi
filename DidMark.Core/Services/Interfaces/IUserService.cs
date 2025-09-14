@@ -33,6 +33,7 @@ namespace DidMark.Core.Services.Interfaces
         Task<bool> SendEmailActivationSmsAsync(long userId);
         Task<bool> SendPhoneNumberActivationSmsAsync(long userId);
         Task<ForgotPasswordResult> ForgotPasswordAsync(ForgotPasswordDTO forgotPassword);
+        Task<CheckResetCodeResult> CheckResetCodeAsync(string code);
         Task<ResetPasswordResult> ResetPasswordAsync(ResetPasswordDTO resetPassword);
 
 

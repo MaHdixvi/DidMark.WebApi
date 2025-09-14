@@ -116,10 +116,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("EnableCors", builder =>
     {
-        builder.WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>())
-               .AllowAnyHeader()
-               .AllowAnyMethod()
-               .AllowCredentials();
+        //builder.WithOrigins(configuration.GetSection("AllowedOrigins").Get<string[]>())
+        //       .AllowAnyHeader()
+        //       .AllowAnyMethod()
+        //       .AllowCredentials();
+        builder.AllowAnyOrigin()
+       .AllowAnyHeader()
+       .AllowAnyMethod();
     });
 });
 #endregion

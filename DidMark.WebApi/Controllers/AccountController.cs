@@ -4,6 +4,7 @@ using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
 using DidMark.Core.Utilities.Enums;
 using DidMark.Core.Utilities.Extensions.Identity;
+using DidMark.DataLayer.Entities.Account;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -57,9 +58,17 @@ namespace DidMark.WebApi.Controllers
 
             if (result == LoginUserResult.Success)
             {
-                var user = !login.PhoneNumber.IsNullOrEmpty()
-                    ? await _userService.GetUserByPhoneNumberAsync(login.PhoneNumber)
-                    : await _userService.GetUserByUsernameAsync(login.Username);
+                User user;
+                if (login.UsernameOrPhone.All(char.IsDigit))
+                {
+                    // یعنی ورودی شماره تلفنه
+                    user = await _userService.GetUserByPhoneNumberAsync(login.UsernameOrPhone);
+                }
+                else
+                {
+                    // یعنی ورودی نام کاربری هست
+                    user = await _userService.GetUserByUsernameAsync(login.UsernameOrPhone);
+                }
 
                 if (user == null)
                     return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
@@ -262,6 +271,23 @@ namespace DidMark.WebApi.Controllers
                 _ => JsonResponseStatus.Error(new { message = "خطا در ارسال کد بازیابی رمز عبور" })
             };
         }
+        [HttpPost("verify-reset-code")]
+        public async Task<IActionResult> VerifyResetCode([FromBody] VerifyResetCodeDTO verify)
+        {
+            if (string.IsNullOrEmpty(verify.ResetCode))
+                return JsonResponseStatus.BadRequest(new { message = "کد بازیابی وارد نشده است" });
+
+            var user = await _userService.CheckResetCodeAsync(verify.ResetCode);
+
+            return user switch
+            {
+                CheckResetCodeResult.UserNotFound => JsonResponseStatus.NotFound(new { message = "کد بازیابی نامعتبر است" }),
+                CheckResetCodeResult.ResetPasswordExpireDatePassed => JsonResponseStatus.Success(new { message = "کد بازیابی منقضی شده است" }),
+                CheckResetCodeResult.Success => JsonResponseStatus.Success(new { message = "کد بازیابی معتبر است" }),
+                _ => JsonResponseStatus.Error(new { message = "خطا در اعتبارنجی کد بازیابی رمز عبور" })
+            };
+        }
+
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO resetPassword)
         {
@@ -276,6 +302,8 @@ namespace DidMark.WebApi.Controllers
             {
                 ResetPasswordResult.InvalidToken => JsonResponseStatus.BadRequest(new { message = "کد بازیابی نامعتبر است" }),
                 ResetPasswordResult.ExpiredToken => JsonResponseStatus.BadRequest(new { message = "کد بازیابی منقضی شده است" }),
+                ResetPasswordResult.SameAsOldPassword => JsonResponseStatus.BadRequest(new { message = "رمز جدید نباید با رمز قبلی یکسان باشد" }),
+                ResetPasswordResult.NotSameNewPasswordAndConfirmPassword => JsonResponseStatus.BadRequest(new { message = "رمز جدید و تکرار آن یکسان نیستند" }),
                 ResetPasswordResult.Success => JsonResponseStatus.Success(new { message = "رمز عبور با موفقیت تغییر یافت" }),
                 _ => JsonResponseStatus.Error(new { message = "خطا در تغییر رمز عبور" })
             };

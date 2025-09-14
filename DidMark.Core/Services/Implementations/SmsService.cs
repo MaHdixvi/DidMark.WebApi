@@ -45,7 +45,7 @@ namespace DidMark.Core.Services.Implementations
 
         public async Task<bool> SendActivationCodeSmsAsync(string phoneNumber, string activationCode)
         {
-            var message = $"برای تغییر رمز عبور خود روی این لینک بزنید https://localhost4200/login/{activationCode}";
+            var message = $"برای فعالسازی حساب خود روی این لینک بزنید https://localhost4200/login/{activationCode}";
             return await SendSmsAsync(phoneNumber, message);
         }
         public async Task<bool> SendActivatedAccountSmsAsync(string phoneNumber)
@@ -192,7 +192,7 @@ namespace DidMark.Core.Services.Implementations
 
         public async Task<bool> SendForgotPasswordCodeSmsAsync(string phoneNumber, string resetCode)
         {
-            var message = $"کد بازیابی رمز عبور شما: {resetCode}\nاین کد تا ۳۰ دقیقه آینده معتبر است.";
+            var message = $"کد بازیابی رمز عبور شما: {resetCode}\nاین کد تا 15 دقیقه آینده معتبر است.";
             return await SendSmsAsync(phoneNumber, message);
         }
 
