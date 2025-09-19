@@ -16,11 +16,13 @@ namespace DidMark.WebApi.Controllers
     public class AccountController : SiteBaseController
     {
         private readonly IUserService _userService;
+        private readonly IRoleService _roleService;
         private readonly IJwtTokenService _jwtTokenService;
 
-        public AccountController(IUserService userService, IJwtTokenService jwtTokenService)
+        public AccountController(IUserService userService, IJwtTokenService jwtTokenService, IRoleService roleService)
         {
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _roleService = roleService ?? throw new ArgumentNullException(nameof(roleService));
             _jwtTokenService = jwtTokenService ?? throw new ArgumentNullException(nameof(jwtTokenService));
         }
 
@@ -72,19 +74,18 @@ namespace DidMark.WebApi.Controllers
 
                 if (user == null)
                     return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
+                var roles = await _roleService.GetUserRolesAsync(user.Id);
 
-                var token = _jwtTokenService.GenerateJwtToken(user);
+                var token = _jwtTokenService.GenerateJwtToken(user, roles);
                 return JsonResponseStatus.Success(new
                 {
                     token,
-                    userInfo = new
-                    {
-                        user.Id,
-                        user.FirstName,
-                        user.LastName,
-                        user.Email,
-                        user.PhoneNumber
-                    }
+                    user.Id,
+                    user.FirstName,
+                    user.LastName,
+                    user.Email,
+                    user.PhoneNumber,
+                    Roles = roles // اینجا رول‌ها رو هم برمی‌گردونی
                 });
             }
 

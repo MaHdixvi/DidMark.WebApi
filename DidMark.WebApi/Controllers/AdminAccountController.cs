@@ -1,5 +1,6 @@
 ﻿using DidMark.Core.DTO.Account;
 using DidMark.Core.Security;
+using DidMark.Core.Services.Implementations;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
 using DidMark.Core.Utilities.Extensions.Identity;
@@ -15,9 +16,13 @@ namespace DidMark.WebApi.Controllers
     {
         private readonly IUserService _userService;
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly IRoleService _roleService;
 
-        public AdminAccountController(IUserService userService, IJwtTokenService jwtTokenService)
+
+        public AdminAccountController(IUserService userService, IJwtTokenService jwtTokenService, IRoleService roleService)
         {
+            _roleService = roleService ?? throw new ArgumentNullException(nameof(roleService));
+
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
             _jwtTokenService = jwtTokenService ?? throw new ArgumentNullException(nameof(jwtTokenService));
         }
@@ -60,19 +65,19 @@ namespace DidMark.WebApi.Controllers
                     {
                         return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });
                     }
+                    var roles = await _roleService.GetUserRolesAsync(user.Id);
 
-                    var token = _jwtTokenService.GenerateJwtToken(user);
+                    var token = _jwtTokenService.GenerateJwtToken(user, roles);
                     return JsonResponseStatus.Success(new
                     {
                         token,
                         expireTime = 30, // Matches JwtSettings.ExpireDays
-                        userInfo = new
-                        {
-                            user.Id,
-                            user.FirstName,
-                            user.LastName,
-                            user.Email
-                        }
+                        user.Id,
+                        user.FirstName,
+                        user.LastName,
+                        user.Email,
+                        user.PhoneNumber,
+                        Roles = roles
                     });
 
                 default:

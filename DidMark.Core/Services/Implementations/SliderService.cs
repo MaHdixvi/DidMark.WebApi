@@ -30,10 +30,15 @@ namespace DidMark.Core.Services.Implementations
                 .Select(s => new SliderDTO
                 {
                     Id = s.Id,
-                    ProductName = s.ProductName,
+                    Title = s.ProductName,                  // ProductName → Title
                     Description = s.Description,
-                    Image = s.Image,
-                    IsActive = !s.IsDelete
+                    ImageUrl = s.ImageUrl,                     // Image → ImageUrl
+                    Link = s.Link,                          // اگر فیلد Link در Entity هست
+                    DisplayOrder = s.DisplayOrder,          // اضافه کردن DisplayOrder
+                    IsActive = !s.IsDelete,
+                    CreatedDate = s.CreateDate,
+                    UpdatedDate = s.LastUpdateDate,
+                    ProductName = s.ProductName
                 })
                 .ToListAsync();
         }
@@ -45,10 +50,15 @@ namespace DidMark.Core.Services.Implementations
                 .Select(s => new SliderDTO
                 {
                     Id = s.Id,
-                    ProductName = s.ProductName,
+                    Title = s.ProductName,
                     Description = s.Description,
-                    Image = s.Image,
-                    IsActive = true
+                    ImageUrl = s.ImageUrl,
+                    Link = s.Link,
+                    DisplayOrder = s.DisplayOrder,
+                    IsActive = true,
+                    CreatedDate = s.CreateDate,
+                    UpdatedDate = s.LastUpdateDate,
+                    ProductName = s.ProductName
                 })
                 .ToListAsync();
         }
@@ -57,10 +67,13 @@ namespace DidMark.Core.Services.Implementations
         {
             var slider = new Slider
             {
-                ProductName = dto.ProductName,
+                ProductName = dto.Title,                  // Title
                 Description = dto.Description,
-                Image = await SaveImage(dto.Image, "sliders"),
-                IsDelete = !(dto.IsActive ?? true)
+                ImageUrl = await SaveImage(dto.ImageUrl, "sliders"),
+                Link = dto.Link,
+                DisplayOrder = dto.DisplayOrder,
+                IsDelete = !dto.IsActive,
+                CreateDate = DateTime.UtcNow
             };
 
             await _sliderRepository.AddEntity(slider);
@@ -74,20 +87,29 @@ namespace DidMark.Core.Services.Implementations
             var slider = await _sliderRepository.GetEntityById(dto.Id);
             if (slider == null) return (false, 0);
 
-            if (!string.IsNullOrEmpty(dto.ProductName)) slider.ProductName = dto.ProductName;
+            if (!string.IsNullOrEmpty(dto.Title)) slider.ProductName = dto.Title;
             if (!string.IsNullOrEmpty(dto.Description)) slider.Description = dto.Description;
-            if (dto.Image != null) {
-                DeleteImage(slider.Image);
-                slider.Image = await SaveImage(dto.Image, "sliders");
+            if (!string.IsNullOrEmpty(dto.Link)) slider.Link = dto.Link;
+            if (!string.IsNullOrEmpty(dto.ProductName)) slider.ProductName = dto.ProductName;
+            if (dto.DisplayOrder.HasValue) slider.DisplayOrder = dto.DisplayOrder.Value;
+
+            if (dto.ImageUrl != null)
+            {
+                DeleteImage(slider.ImageUrl);
+                slider.ImageUrl = await SaveImage(dto.ImageUrl, "sliders");
             }
+
             if (dto.IsActive.HasValue)
                 slider.IsDelete = !dto.IsActive.Value;
+
+            slider.LastUpdateDate = DateTime.UtcNow;
 
             _sliderRepository.UpdateEntity(slider);
             await _sliderRepository.SaveChanges();
 
             return (true, slider.Id);
         }
+
 
         public async Task<SliderDTO?> GetSliderById(long sliderId)
         {
@@ -99,8 +121,13 @@ namespace DidMark.Core.Services.Implementations
                 Id = s.Id,
                 ProductName = s.ProductName,
                 Description = s.Description,
-                Image = s.Image,
-                IsActive = !s.IsDelete
+                IsActive = !s.IsDelete,
+                Title = s.Title,
+                ImageUrl = s.ImageUrl,
+                Link = s.Link,
+                DisplayOrder = s.DisplayOrder,
+                CreatedDate = s.CreateDate,
+                UpdatedDate = s.LastUpdateDate,
             };
         }
 
@@ -109,7 +136,7 @@ namespace DidMark.Core.Services.Implementations
             var slider = await _sliderRepository.GetEntityById(sliderId);
             if (slider == null) return false;
 
-            DeleteImage(slider.Image);
+            DeleteImage(slider.ImageUrl);
 
             slider.IsDelete = true;
             _sliderRepository.UpdateEntity(slider);

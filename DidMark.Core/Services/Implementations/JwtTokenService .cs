@@ -22,18 +22,25 @@ namespace DidMark.Core.Services.Implementations
             _jwtSettings = jwtSettings.Value;
         }
 
-        public string GenerateJwtToken(User user)
+        public string GenerateJwtToken(User user, List<string> roles)
         {
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim("username", user.Username ?? ""),
+        new Claim("firstName", user.FirstName ?? ""),
+        new Claim("lastName", user.LastName ?? ""),
+        new Claim("email", user.Email ?? ""),
+        new Claim("phoneNumber", user.PhoneNumber ?? "")
+    };
+
+            foreach (var role in roles)
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim("phoneNumber", user.PhoneNumber ?? string.Empty),
-                new Claim("username", user.Username ?? string.Empty),
-                new Claim("isActive", user.IsActivated.ToString()),
-            };
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var tokenOptions = new JwtSecurityToken(
                 issuer: _jwtSettings.ValidIssuer,

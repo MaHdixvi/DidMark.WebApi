@@ -1,10 +1,6 @@
 ﻿using DidMark.DataLayer.Entities.Common;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DidMark.DataLayer.Entities.Site
 {
@@ -12,15 +8,29 @@ namespace DidMark.DataLayer.Entities.Site
     {
         #region Properties
 
+        [Display(Name = "عنوان")]
+        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
+        [MaxLength(200, ErrorMessage = "تعداد کاراکتر های {0} نمی‌تواند بیشتر از {1} باشد")]
+        public string Title { get; set; }                     // قبلاً ProductName
+
+        [Display(Name = "توضیحات")]
+        [MaxLength(500, ErrorMessage = "تعداد کاراکتر های {0} نمی‌تواند بیشتر از {1} باشد")]
+        public string? Description { get; set; }             // اختیاری
+
         [Display(Name = "تصویر")]
         [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
         [MaxLength(150, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
-        public string Image { get; set; }
+        public string ImageUrl { get; set; }                  // قبلاً Image
 
+        [Display(Name = "لینک")]
+        [MaxLength(200, ErrorMessage = "تعداد کاراکتر های {0} نمی‌تواند بیشتر از {1} باشد")]
+        public string? Link { get; set; }                     // اختیاری
 
-        [Display(Name = "توضیحات")]
-        [Required(ErrorMessage = "لطفا {0} را وارد کنید")]
-        public string Description { get; set; }
+        [Display(Name = "ترتیب نمایش")]
+        public int DisplayOrder { get; set; } = 0;           // اختیاری
+
+        [Display(Name = "فعال بودن")]
+        public bool IsActive { get; set; } = true;           // اختیاری
 
 
         [Display(Name = "نام محصول")]
@@ -28,10 +38,6 @@ namespace DidMark.DataLayer.Entities.Site
         [MaxLength(100, ErrorMessage = "تعداد کاراکتر های {0} نمیتواند بیشتر از {1} باشد")]
         public string ProductName { get; set; }
 
-
-
-
         #endregion
     }
 }
-

@@ -9,6 +9,6 @@ namespace DidMark.Core.Services.Interfaces
 {
     public interface IJwtTokenService
     {
-        string GenerateJwtToken(User user);
+        string GenerateJwtToken(User user, List<string> roles);
     }
 }
