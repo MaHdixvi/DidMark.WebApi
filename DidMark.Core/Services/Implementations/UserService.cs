@@ -424,22 +424,22 @@ namespace DidMark.Core.Services.Implementations
             if (user == null)
                 return ForgotPasswordResult.UserNotFound;
 
-            // ساخت کد بازیابی 4 رقمی
+            // 🔹 ساخت کد بازیابی 6 رقمی
             var random = new Random();
-            user.ResetPasswordCode = random.Next(100000, 1000000).ToString(); // تولید عدد 1000 تا 9999
-            user.ResetPasswordExpireDate = DateTime.Now.AddMinutes(15);
+            user.ResetPasswordCode = random.Next(100000, 1000000).ToString();
+            user.ResetPasswordExpireDate = DateTime.UtcNow.AddMinutes(2); // ⏳ فقط دو دقیقه اعتبار داره
 
             _userRepository.UpdateEntity(user);
             await _userRepository.SaveChanges();
 
-            // ارسال به ایمیل
+            // 🔹 ارسال به ایمیل
             if (!string.IsNullOrEmpty(user.Email))
             {
                 var body = await _viewRenderService.RenderToStringAsync("Email/ForgotPassword", user);
                 _mailSender.Send(user.Email, "Reset Password", body);
             }
 
-            // ارسال به شماره
+            // 🔹 ارسال به شماره
             if (!string.IsNullOrEmpty(user.PhoneNumber))
             {
                 await _smsService.SendForgotPasswordCodeSmsAsync(user.PhoneNumber, user.ResetPasswordCode);
@@ -447,6 +447,7 @@ namespace DidMark.Core.Services.Implementations
 
             return ForgotPasswordResult.Success;
         }
+
 
         public async Task<CheckResetCodeResult> CheckResetCodeAsync(string code)
         {
