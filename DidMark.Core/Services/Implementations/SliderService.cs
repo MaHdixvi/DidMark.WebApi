@@ -23,10 +23,10 @@ namespace DidMark.Core.Services.Implementations
             _sliderRepository = sliderRepository;
             _env = env;
         }
-
         public async Task<List<SliderDTO>> GetAllSliders()
         {
             return await _sliderRepository.GetEntitiesQuery()
+                .OrderBy(s => s.DisplayOrder)
                 .Select(s => new SliderDTO
                 {
                     Id = s.Id,
@@ -47,6 +47,7 @@ namespace DidMark.Core.Services.Implementations
         {
             return await _sliderRepository.GetEntitiesQuery()
                 .Where(s => !s.IsDelete)
+                .OrderBy(s => s.DisplayOrder)
                 .Select(s => new SliderDTO
                 {
                     Id = s.Id,

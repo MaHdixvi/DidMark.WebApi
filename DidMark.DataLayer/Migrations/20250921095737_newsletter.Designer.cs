@@ -4,6 +4,7 @@ using DidMark.DataLayer.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DidMark.DataLayer.Migrations
 {
     [DbContext(typeof(MasterContext))]
-    partial class MasterContextModelSnapshot : ModelSnapshot
+    [Migration("20250921095737_newsletter")]
+    partial class newsletter
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,7 +60,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 21, 17, 8, 37, 943, DateTimeKind.Local).AddTicks(6493),
+                            CreateDate = new DateTime(2025, 9, 21, 13, 27, 36, 524, DateTimeKind.Local).AddTicks(5215),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Owner",
@@ -66,7 +69,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 9, 21, 17, 8, 37, 943, DateTimeKind.Local).AddTicks(6506),
+                            CreateDate = new DateTime(2025, 9, 21, 13, 27, 36, 524, DateTimeKind.Local).AddTicks(5230),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Owner",
@@ -109,7 +112,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 21, 17, 8, 37, 943, DateTimeKind.Local).AddTicks(6832),
+                            CreateDate = new DateTime(2025, 9, 21, 13, 27, 36, 524, DateTimeKind.Local).AddTicks(5856),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 1L,
@@ -118,7 +121,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 9, 21, 17, 8, 37, 943, DateTimeKind.Local).AddTicks(6833),
+                            CreateDate = new DateTime(2025, 9, 21, 13, 27, 36, 524, DateTimeKind.Local).AddTicks(5857),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 2L,
@@ -216,9 +219,9 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 21, 17, 8, 37, 943, DateTimeKind.Local).AddTicks(6811),
+                            CreateDate = new DateTime(2025, 9, 21, 13, 27, 36, 524, DateTimeKind.Local).AddTicks(5829),
                             Email = "admin@didmark.com",
-                            EmailActiveCode = "813ad69c-e7c6-42f3-a206-0cee45876add",
+                            EmailActiveCode = "1633a8d3-ea87-4db1-86e4-edad6ceda3d4",
                             FirstName = "Admin",
                             IsActivated = true,
                             IsDelete = false,
@@ -231,77 +234,6 @@ namespace DidMark.DataLayer.Migrations
                             PhoneNumber = "09100295341",
                             Username = "Admin"
                         });
-                });
-
-            modelBuilder.Entity("DidMark.DataLayer.Entities.Offers.SpecialOffer", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("DiscountPercent")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDelete")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("LastUpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SpecialOffers");
-                });
-
-            modelBuilder.Entity("DidMark.DataLayer.Entities.Offers.SpecialOfferProduct", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDelete")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("LastUpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("ProductId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("SpecialOfferId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("SpecialOfferId");
-
-                    b.ToTable("SpecialOfferProducts");
                 });
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCode", b =>
@@ -872,7 +804,7 @@ namespace DidMark.DataLayer.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("NewsletterSubscribers");
+                    b.ToTable("newsletterSubscribers");
                 });
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Site.Slider", b =>
@@ -943,25 +875,6 @@ namespace DidMark.DataLayer.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DidMark.DataLayer.Entities.Offers.SpecialOfferProduct", b =>
-                {
-                    b.HasOne("DidMark.DataLayer.Entities.Product.Product", "Product")
-                        .WithMany("ProductSpecialOffers")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DidMark.DataLayer.Entities.Offers.SpecialOffer", "SpecialOffer")
-                        .WithMany("SpecialOfferProducts")
-                        .HasForeignKey("SpecialOfferId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("SpecialOffer");
                 });
 
             modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCodeCategory", b =>
@@ -1149,11 +1062,6 @@ namespace DidMark.DataLayer.Migrations
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("DidMark.DataLayer.Entities.Offers.SpecialOffer", b =>
-                {
-                    b.Navigation("SpecialOfferProducts");
-                });
-
             modelBuilder.Entity("DidMark.DataLayer.Entities.Orders.OffCode", b =>
                 {
                     b.Navigation("OffCodeCategories");
@@ -1179,8 +1087,6 @@ namespace DidMark.DataLayer.Migrations
                     b.Navigation("ProductGalleries");
 
                     b.Navigation("ProductSelectedCategories");
-
-                    b.Navigation("ProductSpecialOffers");
 
                     b.Navigation("ProductVisit");
                 });

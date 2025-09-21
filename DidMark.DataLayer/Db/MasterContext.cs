@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using DidMark.DataLayer.Entities.Access;
 using DidMark.DataLayer.Entities.Account;
+using DidMark.DataLayer.Entities.Offers;
 using DidMark.DataLayer.Entities.Orders;
 using DidMark.DataLayer.Entities.Product;
 using DidMark.DataLayer.Entities.Site;
@@ -35,6 +36,9 @@ public partial class MasterContext : DbContext
     public DbSet<ProductVisit> ProductVisit { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
+    public DbSet<NewsletterSubscriber> NewsletterSubscribers { get; set; }
+    public DbSet<SpecialOffer> SpecialOffers { get; set; }
+    public DbSet<SpecialOfferProduct> SpecialOfferProducts { get; set; }
 
     public DbContextOptions<MasterContext> Options { get; }
 

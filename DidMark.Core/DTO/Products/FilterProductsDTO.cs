@@ -17,6 +17,8 @@ namespace DidMark.Core.DTO.Products
         public List<ProductDto>? Products { get; set; }
         public List<long>? Categories { get; set; }
         public ProductOrderBy OrderBy { get; set; }
+        public bool OnlyDiscounted { get; set; } = false;
+
         public FilterProductsDTO SetPaging(BasePaging paging)
         {
             this.PageId = paging.PageId;
@@ -52,14 +54,21 @@ namespace DidMark.Core.DTO.Products
                     Value = pa.Value,
                     Name = pa.PAttribute.Name
                 }).ToList(),
-                Categories = p.ProductSelectedCategories?.Select(pc => new ProductCategoryDTO
-                {
-                    Id = pc.ProductCategoriesId,
-                    Title = pc.ProductCategories.Title,
-                    ParentId = pc.ProductCategories.ParentId,
-                    UrlTitle = pc.ProductCategories.UrlTitle
-                }).ToList(),
-                Galleries = p.ProductGalleries?.Where(g => !g.IsDelete).Select(g => g.ImageName).ToList()
+                Categories = p.ProductSelectedCategories?
+    .Where(pc => pc.ProductCategories != null)  // فقط موارد معتبر
+    .Select(pc => new ProductCategoryDTO
+    {
+        Id = pc.ProductCategoriesId,
+        Title = pc.ProductCategories!.Title,      // علامت ! ایمنی بعد از Where
+        ParentId = pc.ProductCategories.ParentId,
+        UrlTitle = pc.ProductCategories.UrlTitle
+    }).ToList(),
+
+                Galleries = p.ProductGalleries?.Where(g => !g.IsDelete).Select(g => g.ImageName).ToList(),
+                DiscountEndDate = p.DiscountEndDate,
+                DiscountPercent = p.DiscountPercent,
+                DiscountStartDate = p.DiscountStartDate,
+                FinalPrice = p.FinalPrice
             }).ToList();
 
             return this;
@@ -72,6 +81,7 @@ namespace DidMark.Core.DTO.Products
             CreateDataAsc,
             CreateDataDes,
             IsSpecial,
+            MaxDiscount // 🔹 اضافه شد
         }
     }
 }

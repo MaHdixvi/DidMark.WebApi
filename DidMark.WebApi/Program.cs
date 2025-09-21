@@ -71,6 +71,11 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 
 #region Application Services
 builder.Services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<ISliderService, SliderService>();
+
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddPayamakService();
 builder.Services.AddScoped<IProductService, ProductService>();
@@ -90,6 +95,9 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<ITransactionLogService, TransactionLogService>();
 builder.Services.AddScoped<IZarinPalService, ZarinPalService>();
 builder.Services.AddScoped<IAttributeService, AttributeService>();
+builder.Services.AddScoped<INewsletterService, NewsletterService>();
+builder.Services.AddScoped<ISpecialOfferService, SpecialOfferService>();
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMvc();

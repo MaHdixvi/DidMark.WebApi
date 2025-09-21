@@ -368,18 +368,43 @@ namespace DidMark.Core.Services.Implementations
             var productsQuery = productRepository.GetEntitiesQuery()
                 .Include(p => p.ProductAttributes)
                 .ThenInclude(pa => pa.PAttribute)
+                .Include(p => p.ProductSelectedCategories) // مطمئن شو categories هم لود میشن
                 .Where(p => !p.IsDelete)
                 .AsQueryable();
 
-            // فیلتر و مرتب‌سازی طبق filter
+            // فیلتر بر اساس عنوان
             if (!string.IsNullOrEmpty(filter.Title))
                 productsQuery = productsQuery.Where(p => p.ProductName.Contains(filter.Title));
 
+            // فیلتر بر اساس قیمت
             if (filter.StartPrice > 0)
                 productsQuery = productsQuery.Where(p => p.Price >= filter.StartPrice);
 
             if (filter.EndPrice > 0)
                 productsQuery = productsQuery.Where(p => p.Price <= filter.EndPrice);
+
+            // فیلتر بر اساس دسته‌بندی‌ها
+            if (filter.Categories != null && filter.Categories.Any())
+            {
+                // گرفتن همه شناسه‌های فرزندان برای هر دسته‌بندی انتخاب شده
+                var allCategoryIds = new List<long>();
+                foreach (var catId in filter.Categories)
+                {
+                    allCategoryIds.Add(catId);
+                    allCategoryIds.AddRange(await GetAllChildCategoryIds(catId));
+                }
+
+                productsQuery = productsQuery.Where(p =>
+                    p.ProductSelectedCategories.Any(c => allCategoryIds.Contains(c.ProductCategoriesId))
+                );
+            }
+            // 🔹 فیلتر بر اساس تخفیف
+            if (filter.OnlyDiscounted)
+            {
+                productsQuery = productsQuery.Where(p => p.DiscountPercent > 0
+                    && (!p.DiscountStartDate.HasValue || p.DiscountStartDate <= DateTime.Now)
+                    && (!p.DiscountEndDate.HasValue || p.DiscountEndDate >= DateTime.Now));
+            }
 
             // مرتب‌سازی
             if (filter.OrderBy != null)
@@ -401,6 +426,9 @@ namespace DidMark.Core.Services.Implementations
                     case ProductOrderBy.IsSpecial:
                         productsQuery = productsQuery.OrderByDescending(x => x.IsSpecial);
                         break;
+                    case ProductOrderBy.MaxDiscount: // 🔹 اضافه شد
+                        productsQuery = productsQuery.OrderByDescending(x => x.DiscountPercent);
+                        break;
                 }
             }
 
@@ -411,6 +439,26 @@ namespace DidMark.Core.Services.Implementations
 
             return filter.SetProducts(products).SetPaging(pager);
         }
+
+        // تابع کمکی برای گرفتن همه فرزندان (بازگشتی)
+        private async Task<List<long>> GetAllChildCategoryIds(long parentId)
+        {
+            var children = await productCategoriesRepository.GetEntitiesQuery()
+                .Where(c => c.ParentId == parentId)
+                .Select(c => c.Id)
+                .ToListAsync();
+
+            var allIds = new List<long>();
+
+            foreach (var childId in children)
+            {
+                allIds.Add(childId);
+                allIds.AddRange(await GetAllChildCategoryIds(childId));
+            }
+
+            return allIds;
+        }
+
 
 
         #endregion

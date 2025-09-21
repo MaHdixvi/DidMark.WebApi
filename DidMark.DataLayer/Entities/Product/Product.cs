@@ -1,4 +1,5 @@
 ﻿using DidMark.DataLayer.Entities.Common;
+using DidMark.DataLayer.Entities.Offers;
 using DidMark.DataLayer.Entities.Orders;
 using System;
 using System.Collections.Generic;
@@ -76,26 +77,47 @@ namespace DidMark.DataLayer.Entities.Product
         {
             get
             {
+                var price = Price;
+
+                // اول تخفیف تکی محصول
                 if (DiscountPercent.HasValue &&
-                    DiscountPercent.Value > 0 &&
-                    (!DiscountStartDate.HasValue || DiscountStartDate <= DateTime.Now) &&
-                    (!DiscountEndDate.HasValue || DiscountEndDate >= DateTime.Now))
+                    DiscountStartDate <= DateTime.Now &&
+                    DiscountEndDate >= DateTime.Now)
                 {
-                    return Price - (Price * DiscountPercent.Value / 100);
+                    price -= (price * DiscountPercent.Value / 100);
                 }
-                return Price;
+
+                // بعد تخفیف کمپین‌ها (قوی‌ترین کمپین)
+                if (ProductSpecialOffers != null)
+                {
+                    var activeOffers = ProductSpecialOffers
+                        .Where(x => x.SpecialOffer.StartDate <= DateTime.Now &&
+                                    x.SpecialOffer.EndDate >= DateTime.Now &&
+                                    x.SpecialOffer.IsDelete)
+                        .Select(x => x.SpecialOffer.DiscountPercent);
+
+                    if (activeOffers.Any())
+                    {
+                        var maxOffer = activeOffers.Max() ?? 0; // اگر null بود 0 بذار
+                        price -= (price * maxOffer / 100);
+                    }
+                }
+
+                return price;
             }
         }
         #endregion
 
-        #endregion
+            #endregion
 
-        #region relations
+            #region relations
         public virtual ICollection<ProductGalleries> ProductGalleries { get; set; }
         public virtual ICollection<ProductVisit> ProductVisit { get; set; }
         public virtual ICollection<ProductSelectedCategories> ProductSelectedCategories { get; set; }
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
         public virtual List<ProductAttribute> ProductAttributes { get; set; }
+        public virtual ICollection<SpecialOfferProduct> ProductSpecialOffers { get; set; }
+
 
         #endregion
     }
