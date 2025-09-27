@@ -233,7 +233,7 @@ namespace DidMark.Core.Services.Implementations
                 ProductName = d.Product.ProductName,
                 Count = d.Count,
                 Price = d.Price,
-                ImageName = PathTools.Domain + PathTools.ProductImagePath + d.Product.ImageName
+                ImageName = d.Product.ImageName
             }).ToList();
         }
 
@@ -254,7 +254,7 @@ namespace DidMark.Core.Services.Implementations
                     Count = d.Count,
                     Price = d.Price,
                     ProductName = d.Product.ProductName,
-                    ImageName = PathTools.Domain + PathTools.ProductImagePath + d.Product.ImageName
+                    ImageName = d.Product.ImageName
                 });
             }
 
