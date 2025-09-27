@@ -76,6 +76,11 @@ namespace DidMark.DataLayer.Entities.Account
         public DateTime? ResetPasswordExpireDate { get; set; }
 
 
+
+        // فیلد پذیرش قوانین
+        public bool HasAcceptedTerms { get; set; } = false;
+        public DateTime? TermsAcceptedDate { get; set; }
+
         #endregion
 
         #region Relations

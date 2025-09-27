@@ -487,5 +487,29 @@ namespace DidMark.Core.Services.Implementations
             return ResetPasswordResult.Success;
         }
 
+
+
+        public async Task<bool> HasAcceptedTermsAsync(long userId)
+        {
+            var user = await _userRepository.GetEntityById(userId);
+            return user?.HasAcceptedTerms ?? false;
+        }
+
+        public async Task<bool> AcceptTermsAsync(long userId)
+        {
+            var user = await _userRepository.GetEntityById(userId);
+            if (user == null) return false;
+
+            if (!user.HasAcceptedTerms)
+            {
+                user.HasAcceptedTerms = true;
+                user.TermsAcceptedDate = DateTime.UtcNow;
+
+                _userRepository.UpdateEntity(user);
+                await _userRepository.SaveChanges();
+            }
+
+            return true;
+        }
     }
 }

@@ -39,6 +39,7 @@ public partial class MasterContext : DbContext
     public DbSet<NewsletterSubscriber> NewsletterSubscribers { get; set; }
     public DbSet<SpecialOffer> SpecialOffers { get; set; }
     public DbSet<SpecialOfferProduct> SpecialOfferProducts { get; set; }
+    public DbSet<UserQuestion> UserQuestions { get; set; }
 
     public DbContextOptions<MasterContext> Options { get; }
 

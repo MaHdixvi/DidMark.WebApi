@@ -4,6 +4,7 @@ using DidMark.DataLayer.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DidMark.DataLayer.Migrations
 {
     [DbContext(typeof(MasterContext))]
-    partial class MasterContextModelSnapshot : ModelSnapshot
+    [Migration("20250925122741_userQuestion")]
+    partial class userQuestion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,7 +60,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 25, 16, 57, 11, 233, DateTimeKind.Local).AddTicks(3079),
+                            CreateDate = new DateTime(2025, 9, 25, 15, 57, 40, 430, DateTimeKind.Local).AddTicks(1169),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Owner",
@@ -66,7 +69,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 9, 25, 16, 57, 11, 233, DateTimeKind.Local).AddTicks(3102),
+                            CreateDate = new DateTime(2025, 9, 25, 15, 57, 40, 430, DateTimeKind.Local).AddTicks(1198),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Owner",
@@ -109,7 +112,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 25, 16, 57, 11, 233, DateTimeKind.Local).AddTicks(3719),
+                            CreateDate = new DateTime(2025, 9, 25, 15, 57, 40, 430, DateTimeKind.Local).AddTicks(2149),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 1L,
@@ -118,7 +121,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 9, 25, 16, 57, 11, 233, DateTimeKind.Local).AddTicks(3723),
+                            CreateDate = new DateTime(2025, 9, 25, 15, 57, 40, 430, DateTimeKind.Local).AddTicks(2153),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 2L,
@@ -222,9 +225,9 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 25, 16, 57, 11, 233, DateTimeKind.Local).AddTicks(3665),
+                            CreateDate = new DateTime(2025, 9, 25, 15, 57, 40, 430, DateTimeKind.Local).AddTicks(2079),
                             Email = "admin@didmark.com",
-                            EmailActiveCode = "5563a4b0-8311-491e-9626-f9e7ee3983e4",
+                            EmailActiveCode = "544c06f4-7f2a-4023-a6b0-5e079fd57259",
                             FirstName = "Admin",
                             HasAcceptedTerms = false,
                             IsActivated = true,
@@ -942,12 +945,14 @@ namespace DidMark.DataLayer.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Answer")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("FullName")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 

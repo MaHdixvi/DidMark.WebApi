@@ -415,12 +415,12 @@ namespace DidMark.Core.Services.Implementations
                         productsQuery = productsQuery.OrderBy(x => x.Price);
                         break;
                     case ProductOrderBy.PriceDes:
-                        productsQuery = productsQuery.OrderByDescending(x => x.Price);
+                        productsQuery = productsQuery.OrderByDescending(x => x.FinalPrice);
                         break;
-                    case ProductOrderBy.CreateDataAsc:
+                    case ProductOrderBy.CreateDateAsc:
                         productsQuery = productsQuery.OrderBy(x => x.CreateDate);
                         break;
-                    case ProductOrderBy.CreateDataDes:
+                    case ProductOrderBy.CreateDateDes:
                         productsQuery = productsQuery.OrderByDescending(x => x.CreateDate);
                         break;
                     case ProductOrderBy.IsSpecial:

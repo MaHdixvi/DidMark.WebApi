@@ -97,6 +97,7 @@ builder.Services.AddScoped<IZarinPalService, ZarinPalService>();
 builder.Services.AddScoped<IAttributeService, AttributeService>();
 builder.Services.AddScoped<INewsletterService, NewsletterService>();
 builder.Services.AddScoped<ISpecialOfferService, SpecialOfferService>();
+builder.Services.AddScoped<IUserQuestionService, UserQuestionService>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();

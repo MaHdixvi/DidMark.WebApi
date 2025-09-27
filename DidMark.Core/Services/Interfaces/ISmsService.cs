@@ -16,6 +16,8 @@ namespace DidMark.Core.Services.Interfaces
         Task<bool> WaitForActivationAsync(string userName, DateTime dateTime);
         Task<bool> SendOrderSummarySmsAsync(string phoneNumber, List<OrderBasketDetail> items, decimal totalPrice);
         Task<bool> SendForgotPasswordCodeSmsAsync(string phoneNumber, string resetCode);
+        Task<bool> SendCustomSmsAsync(string phoneNumber, string message);
+
 
     }
 }
