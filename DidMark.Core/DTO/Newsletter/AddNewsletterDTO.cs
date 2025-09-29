@@ -9,7 +9,9 @@ namespace DidMark.Core.DTO.Newsletter
 {
     public class AddNewsletterDTO
     {
-        [Required, EmailAddress]
+        [Required(ErrorMessage = "ایمیل الزامی است")]
+        [EmailAddress(ErrorMessage = "فرمت ایمیل معتبر نیست")]
+        [MaxLength(150, ErrorMessage = "ایمیل نمی‌تواند بیشتر از 150 کاراکتر باشد")]
         public string Email { get; set; }
     }
 }

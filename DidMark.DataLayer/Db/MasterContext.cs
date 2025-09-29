@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using DidMark.DataLayer.Entities.Access;
 using DidMark.DataLayer.Entities.Account;
+using DidMark.DataLayer.Entities.Comments;
+using DidMark.DataLayer.Entities.Newsletter;
 using DidMark.DataLayer.Entities.Offers;
 using DidMark.DataLayer.Entities.Orders;
 using DidMark.DataLayer.Entities.Product;
+using DidMark.DataLayer.Entities.Products;
 using DidMark.DataLayer.Entities.Site;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +43,9 @@ public partial class MasterContext : DbContext
     public DbSet<SpecialOffer> SpecialOffers { get; set; }
     public DbSet<SpecialOfferProduct> SpecialOfferProducts { get; set; }
     public DbSet<UserQuestion> UserQuestions { get; set; }
+    public DbSet<ProductComment> ProductComments { get; set; }
+    public DbSet<ProductWishlist> ProductWishlists { get; set; }
+    public DbSet<Campaign> Campaigns { get; set; }
 
     public DbContextOptions<MasterContext> Options { get; }
 

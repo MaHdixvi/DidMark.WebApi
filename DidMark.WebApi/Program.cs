@@ -98,6 +98,8 @@ builder.Services.AddScoped<IAttributeService, AttributeService>();
 builder.Services.AddScoped<INewsletterService, NewsletterService>();
 builder.Services.AddScoped<ISpecialOfferService, SpecialOfferService>();
 builder.Services.AddScoped<IUserQuestionService, UserQuestionService>();
+builder.Services.AddScoped<IProductCommentService, ProductCommentService>();
+builder.Services.AddScoped<IProductWishlistService, ProductWishlistService>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
