@@ -78,8 +78,8 @@ namespace DidMark.Core.DTO.Products
         {
             PriceAsc,
             PriceDes,
-            CreateDataAsc,
-            CreateDataDes,
+            CreateDateAsc,
+            CreateDateDes,
             IsSpecial,
             MaxDiscount // 🔹 اضافه شد
         }

@@ -4,6 +4,7 @@ using DidMark.DataLayer.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DidMark.DataLayer.Migrations
 {
     [DbContext(typeof(MasterContext))]
-    partial class MasterContextModelSnapshot : ModelSnapshot
+    [Migration("20250925132712_userQuestion-2")]
+    partial class userQuestion2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,7 +69,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 9, 21, 17, 8, 37, 943, DateTimeKind.Local).AddTicks(6506),
+                            CreateDate = new DateTime(2025, 9, 25, 16, 57, 11, 233, DateTimeKind.Local).AddTicks(3102),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Owner",
@@ -109,7 +112,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 21, 17, 8, 37, 943, DateTimeKind.Local).AddTicks(6832),
+                            CreateDate = new DateTime(2025, 9, 25, 16, 57, 11, 233, DateTimeKind.Local).AddTicks(3719),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 1L,
@@ -118,7 +121,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 9, 21, 17, 8, 37, 943, DateTimeKind.Local).AddTicks(6833),
+                            CreateDate = new DateTime(2025, 9, 25, 16, 57, 11, 233, DateTimeKind.Local).AddTicks(3723),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 2L,
@@ -222,9 +225,9 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 9, 21, 17, 8, 37, 943, DateTimeKind.Local).AddTicks(6811),
+                            CreateDate = new DateTime(2025, 9, 25, 16, 57, 11, 233, DateTimeKind.Local).AddTicks(3665),
                             Email = "admin@didmark.com",
-                            EmailActiveCode = "813ad69c-e7c6-42f3-a206-0cee45876add",
+                            EmailActiveCode = "5563a4b0-8311-491e-9626-f9e7ee3983e4",
                             FirstName = "Admin",
                             HasAcceptedTerms = false,
                             IsActivated = true,

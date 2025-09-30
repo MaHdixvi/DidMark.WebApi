@@ -36,7 +36,8 @@ namespace DidMark.Core.Services.Interfaces
         Task<CheckResetCodeResult> CheckResetCodeAsync(string code);
         Task<ResetPasswordResult> ResetPasswordAsync(ResetPasswordDTO resetPassword);
 
-
+        Task<bool> HasAcceptedTermsAsync(long userId);
+        Task<bool> AcceptTermsAsync(long userId);
 
     }
 }
