@@ -11,6 +11,7 @@ namespace DidMark.Core.DTO.Orders
     public class OrderDto
     {
         public long Id { get; set; }
+        public long UserId { get; set; }
         public bool IsPay { get; set; }
         public DateTime? PaymentDate { get; set; }
         public decimal TotalPrice { get; set; } // محاسبه‌شده
