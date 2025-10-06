@@ -29,6 +29,14 @@ namespace DidMark.Core.DTO.Orders
         [Display(Name = "قیمت")]
         public decimal Price { get; set; }
 
+        // اضافه شده: قیمت با تخفیف محصول
+        [Display(Name = "قیمت با تخفیف محصول")]
+        public decimal FinalPrice { get; set; }
+
+        // اضافه شده: درصد تخفیف محصول
+        [Display(Name = "درصد تخفیف محصول")]
+        public int? DiscountPercent { get; set; }
+
         [Display(Name = "تصویر")]
         public string? ImageName { get; set; }
 

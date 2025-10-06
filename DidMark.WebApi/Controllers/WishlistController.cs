@@ -2,12 +2,13 @@
 using DidMark.Core.DTO.Products.ProductWishList;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Common;
+using DidMark.Core.Utilities.Extensions.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace DidMark.WebApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class WishlistController : SiteBaseController
     {
@@ -16,6 +17,15 @@ namespace DidMark.WebApi.Controllers
         public WishlistController(IProductWishlistService wishlistService)
         {
             _wishlistService = wishlistService;
+        }
+
+
+        private long GetCurrentUserId()
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+                throw new UnauthorizedAccessException("کاربر وارد نشده است");
+
+            return User.GetUserId();
         }
 
         /// <summary>
@@ -67,7 +77,7 @@ namespace DidMark.WebApi.Controllers
             if (!ModelState.IsValid)
                 return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
 
-            var userId = GetUserId();
+            var userId = GetCurrentUserId();
             if (userId == 0)
                 return JsonResponseStatus.Unauthorized(new { message = "لطفاً وارد حساب کاربری خود شوید" });
 

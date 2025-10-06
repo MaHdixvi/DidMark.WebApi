@@ -61,6 +61,9 @@ namespace DidMark.DataLayer.Entities.Product
 
         [Display(Name = "ویژه")]
         public bool IsSpecial { get; set; }
+
+        [Display(Name = "فعال")]
+        public bool IsActive { get; set; }
         #region discount properties
         [Display(Name = "درصد تخفیف")]
         [Range(0, 100, ErrorMessage = "درصد تخفیف باید بین 0 تا 100 باشد")]

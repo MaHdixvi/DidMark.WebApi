@@ -38,50 +38,6 @@ namespace DidMark.WebApi.Controllers
             return User.GetUserId();
         }
 
-        #region Apply Discount
-
-        [HttpPost("apply-offcode")]
-        [Authorize]
-        public async Task<IActionResult> ApplyOffCode([FromQuery] string code)
-        {
-            try
-            {
-                var userId = GetCurrentUserId();
-
-                if (string.IsNullOrWhiteSpace(code))
-                    return JsonResponseStatus.BadRequest(new { message = "کد تخفیف نامعتبر است" });
-
-                var result = await _orderService.ApplyOffCodeAsync(userId, code);
-
-                if (!result)
-                    return JsonResponseStatus.NotFound(new { message = "کد تخفیف یافت نشد یا منقضی شده است" });
-
-                var basketDetails = await _orderService.GetUserBasketDetailsAsync(userId);
-                var order = await _orderService.GetUserOpenOrderAsync(userId);
-
-                return JsonResponseStatus.Success(new
-                {
-                    message = "کد تخفیف با موفقیت اعمال شد",
-                    data = new
-                    {
-                        items = basketDetails,
-                        order.Subtotal,
-                        order.DiscountAmount,
-                        order.TotalPrice
-                    }
-                });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return JsonResponseStatus.Unauthorized(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return JsonResponseStatus.Error(new { message = "خطایی رخ داد", detail = ex.Message });
-            }
-        }
-
-        #endregion
 
         #region Create Transaction
 

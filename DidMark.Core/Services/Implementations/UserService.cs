@@ -156,6 +156,26 @@ namespace DidMark.Core.Services.Implementations
 
             return LoginUserResult.Success;
         }
+        public async Task<LoginUserResult> LoginAdminAsync(LoginAdminDTO login)
+        {
+            if (login.Email.IsNullOrEmpty())
+            {
+                return LoginUserResult.IncorrectData;
+            }
+            var password = _passwordHelper.EncodePasswordMd5(login.Password);
+
+            User user;
+            
+                user = await _userRepository.GetEntitiesQuery()
+    .SingleOrDefaultAsync(s => s.Email == login.Email && s.Password == password);
+            
+
+
+            if (user == null)
+                return LoginUserResult.IncorrectData;
+
+            return LoginUserResult.Success;
+        }
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
@@ -252,7 +272,7 @@ namespace DidMark.Core.Services.Implementations
 
             if (!string.IsNullOrWhiteSpace(user.Province))
                 existingUser.Province = user.Province.SanitizeText();
-            if (!string.IsNullOrWhiteSpace(user.Email)) {
+            if (!string.IsNullOrWhiteSpace(user.Email)&user.Email!=existingUser.Email) {
 
                 if (await ExistsByEmailAsync(user.Email))
                     return EditUserResult.EmailExists;

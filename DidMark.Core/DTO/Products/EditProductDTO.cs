@@ -47,6 +47,9 @@ namespace DidMark.Core.DTO.Products
 
         [Display(Name = "ویژه")]
         public bool? IsSpecial { get; set; }
+
+        [Display(Name = "فعال")]
+        public bool? IsActive { get; set; }
         public List<EditProductAttributeDto> Attributes { get; set; } = new();
         // 🔹 تخفیف
         [Display(Name = "درصد تخفیف")]

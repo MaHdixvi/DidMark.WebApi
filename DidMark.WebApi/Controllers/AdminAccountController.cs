@@ -28,14 +28,14 @@ namespace DidMark.WebApi.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginUserDTO login)
+        public async Task<IActionResult> Login([FromBody] LoginAdminDTO login)
         {
             if (!ModelState.IsValid)
             {
                 return JsonResponseStatus.BadRequest(new { message = "داده‌های ورودی معتبر نیستند" });
             }
 
-            var result = await _userService.LoginUserAsync(login, checkAdminRole: true);
+            var result = await _userService.LoginAdminAsync(login);
 
             switch (result)
             {
@@ -50,17 +50,8 @@ namespace DidMark.WebApi.Controllers
 
                 case LoginUserResult.Success:
 
-                    User user;
-                    if (login.UsernameOrPhone.All(char.IsDigit))
-                    {
-                        // یعنی ورودی شماره تلفنه
-                        user = await _userService.GetUserByPhoneNumberAsync(login.UsernameOrPhone);
-                    }
-                    else
-                    {
-                        // یعنی ورودی نام کاربری هست
-                        user = await _userService.GetUserByUsernameAsync(login.UsernameOrPhone);
-                    }
+                        User user = await _userService.GetUserByEmailAsync(login.Email);
+                   
                     if (user == null)
                     {
                         return JsonResponseStatus.NotFound(new { message = "کاربر یافت نشد" });

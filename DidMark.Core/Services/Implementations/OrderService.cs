@@ -113,14 +113,21 @@ namespace DidMark.Core.Services.Implementations
                     .ThenInclude(oc => oc.UserOffCodes)
                 .SingleOrDefaultAsync(o => o.Id == orderId && !o.IsDelete);
 
-
             decimal subtotal = 0m;
             decimal discountAmount = 0m;
 
             foreach (var detail in order.OrderDetails.Where(d => !d.IsDelete))
             {
-                decimal productTotal = detail.Price * detail.Count;
-                subtotal += productTotal;
+                // محاسبه قیمت اصلی بدون تخفیف
+                decimal originalProductTotal = detail.Product.Price * detail.Count;
+                // محاسبه قیمت با تخفیف محصول
+                decimal discountedProductTotal = detail.Product.FinalPrice * detail.Count;
+
+                subtotal += originalProductTotal; // ساب‌توتال بر اساس قیمت اصلی
+
+                // اضافه شده: محاسبه تخفیف محصول
+                decimal productDiscount = originalProductTotal - discountedProductTotal;
+                discountAmount += productDiscount;
 
                 if (order.OffCode != null)
                 {
@@ -140,7 +147,9 @@ namespace DidMark.Core.Services.Implementations
 
                     if (isOffCodeValid && canUseForUser && canApply)
                     {
-                        discountAmount += productTotal * (order.OffCode.DiscountPercentage / 100);
+                        // تغییر داده شده: اعمال کد تخفیف روی قیمت با تخفیف محصول
+                        decimal offCodeDiscount = discountedProductTotal * (order.OffCode.DiscountPercentage / 100);
+                        discountAmount += offCodeDiscount;
                     }
                 }
             }
@@ -152,7 +161,6 @@ namespace DidMark.Core.Services.Implementations
             _orderRepository.UpdateEntity(order);
             await _orderRepository.SaveChanges();
         }
-
 
         #endregion
 
@@ -183,6 +191,8 @@ namespace DidMark.Core.Services.Implementations
                 if (product.NumberofProduct < detail.Count + count)
                     throw new InvalidOperationException("موجودی محصول کافی نیست");
                 detail.Count += count;
+                detail.Price = product.FinalPrice;
+
                 _orderDetailRepository.UpdateEntity(detail);
             }
             else
@@ -192,7 +202,8 @@ namespace DidMark.Core.Services.Implementations
                     OrderId = order.Id,
                     ProductId = productId,
                     Count = count,
-                    Price = (int)product.FinalPrice
+                    Price = (int)product.FinalPrice,
+                    IsDelete = false
                 };
                 await _orderDetailRepository.AddEntity(newDetail);
             }
@@ -240,7 +251,7 @@ namespace DidMark.Core.Services.Implementations
 
         public async Task<List<OrderBasketDetail>> GetUserBasketDetailsAsync(long userId)
         {
-            var order = await GetUserOpenOrderAsync(userId);
+           var order = await GetUserOpenOrderAsync(userId);
             if (order == null) return null;
 
             var details = order.OrderDetails.Where(d => !d.IsDelete).ToList();
@@ -248,13 +259,24 @@ namespace DidMark.Core.Services.Implementations
 
             foreach (var d in details)
             {
+                // اضافه شده: محاسبه قیمت نهایی با در نظر گرفتن تخفیف محصول
+                var finalPrice = d.Product.FinalPrice;
+                var discountPercent = d.Product.DiscountPercent;
+
                 basket.Add(new OrderBasketDetail
                 {
                     Id = d.Id,
                     Count = d.Count,
-                    Price = d.Price,
+                    Price = d.Price, // قیمت اصلی
+                    FinalPrice = finalPrice, // اضافه شده: قیمت با تخفیف محصول
+                    DiscountPercent = discountPercent, // اضافه شده: درصد تخفیف محصول
                     ProductName = d.Product.ProductName,
-                    ImageName = d.Product.ImageName
+                    ImageName = d.Product.ImageName,
+                    // فیلدهای اختیاری
+                    Color = null,
+                    Code = null,
+                    Size = null,
+                    OffCode = order.OffCode?.Code
                 });
             }
 
@@ -351,7 +373,36 @@ namespace DidMark.Core.Services.Implementations
             return true;
         }
         #endregion
+        // اضافه کردن متد جدید برای آپدیت تعداد
+        public async Task UpdateOrderDetailCountAsync(long detailId, int newCount, long userId)
+        {
+            var detail = await _orderDetailRepository.GetEntitiesQuery()
+                .Include(d => d.Order)
+                .Include(d => d.Product)
+                .SingleOrDefaultAsync(d => d.Id == detailId && !d.IsDelete);
 
+            if (detail == null || detail.Order.UserId != userId)
+                throw new InvalidOperationException("جزئیات سفارش یافت نشد");
+
+            // بررسی موجودی محصول
+            if (detail.Product.NumberofProduct + detail.Count < newCount)
+                throw new InvalidOperationException("موجودی محصول کافی نیست");
+
+            // محاسبه تفاوت تعداد
+            var countDifference = newCount - detail.Count;
+
+            // آپدیت تعداد
+            detail.Count = newCount;
+
+            // آپدیت موجودی محصول
+            detail.Product.NumberofProduct -= countDifference;
+
+            _orderDetailRepository.UpdateEntity(detail);
+            await _orderDetailRepository.SaveChanges();
+
+            // محاسبه مجدد قیمت کل
+            await CalculateOrderTotalPriceAsync(detail.OrderId, userId);
+        }
         #region Dispose
         public void Dispose()
         {

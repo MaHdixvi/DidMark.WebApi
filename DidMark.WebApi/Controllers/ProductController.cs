@@ -49,7 +49,7 @@ namespace DidMark.WebApi.Controllers
         }
         #endregion
 
-        
+
 
         #region Get Single Product
         /// <summary>
@@ -71,8 +71,8 @@ namespace DidMark.WebApi.Controllers
                 return JsonResponseStatus.NotFound(new { message = "محصول یافت نشد" });
             }
 
-            var productGalleries = await _productService.GetProductActiveGalleries(id);
-            return JsonResponseStatus.Success(new { product, galleries = productGalleries });
+            // دیگر نیازی به دریافت جداگانه گالری‌ها نیست چون در سرویس انجام شده
+            return JsonResponseStatus.Success(product);
         }
         #endregion
 

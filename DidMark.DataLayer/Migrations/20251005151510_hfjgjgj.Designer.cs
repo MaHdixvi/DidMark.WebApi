@@ -4,6 +4,7 @@ using DidMark.DataLayer.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DidMark.DataLayer.Migrations
 {
     [DbContext(typeof(MasterContext))]
-    partial class MasterContextModelSnapshot : ModelSnapshot
+    [Migration("20251005151510_hfjgjgj")]
+    partial class hfjgjgj
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,7 +60,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 10, 5, 23, 2, 1, 959, DateTimeKind.Local).AddTicks(742),
+                            CreateDate = new DateTime(2025, 10, 5, 18, 45, 10, 272, DateTimeKind.Local).AddTicks(9880),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Owner",
@@ -66,7 +69,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 10, 5, 23, 2, 1, 959, DateTimeKind.Local).AddTicks(755),
+                            CreateDate = new DateTime(2025, 10, 5, 18, 45, 10, 272, DateTimeKind.Local).AddTicks(9893),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleName = "Owner",
@@ -109,7 +112,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 10, 5, 23, 2, 1, 959, DateTimeKind.Local).AddTicks(1055),
+                            CreateDate = new DateTime(2025, 10, 5, 18, 45, 10, 273, DateTimeKind.Local).AddTicks(489),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 1L,
@@ -118,7 +121,7 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 2L,
-                            CreateDate = new DateTime(2025, 10, 5, 23, 2, 1, 959, DateTimeKind.Local).AddTicks(1056),
+                            CreateDate = new DateTime(2025, 10, 5, 18, 45, 10, 273, DateTimeKind.Local).AddTicks(490),
                             IsDelete = false,
                             LastUpdateDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RoleId = 2L,
@@ -222,9 +225,9 @@ namespace DidMark.DataLayer.Migrations
                         new
                         {
                             Id = 1L,
-                            CreateDate = new DateTime(2025, 10, 5, 23, 2, 1, 959, DateTimeKind.Local).AddTicks(1032),
+                            CreateDate = new DateTime(2025, 10, 5, 18, 45, 10, 273, DateTimeKind.Local).AddTicks(464),
                             Email = "admin@didmark.com",
-                            EmailActiveCode = "ab793d85-4c57-485b-a31f-20dffcd29481",
+                            EmailActiveCode = "7980b342-1c0b-43de-af4e-1aca20756b51",
                             FirstName = "Admin",
                             HasAcceptedTerms = false,
                             IsActivated = true,
@@ -716,9 +719,6 @@ namespace DidMark.DataLayer.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDelete")
                         .HasColumnType("bit");

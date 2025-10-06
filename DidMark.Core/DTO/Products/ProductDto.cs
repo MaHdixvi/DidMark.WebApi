@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DidMark.Core.DTO.Products.ProductGalleries;
 
 namespace DidMark.DataLayer.Entities.Product
 {
@@ -18,6 +19,7 @@ namespace DidMark.DataLayer.Entities.Product
         public int NumberofProduct { get; set; }
         public bool IsExists { get; set; }
         public bool IsSpecial { get; set; }
+        public bool IsActive { get; set; }
         public string ImageName { get; set; }
 
         // ویژگی‌های محصول
@@ -27,7 +29,7 @@ namespace DidMark.DataLayer.Entities.Product
         public List<ProductCategoryDTO> Categories { get; set; } = new();
 
         // گالری تصاویر محصول
-        public List<string> Galleries { get; set; } = new();
+        public List<ProductGalleryDTO> Galleries { get; set; } = new();
         // 🔹 تخفیف
         public int? DiscountPercent { get; set; }
         public DateTime? DiscountStartDate { get; set; }

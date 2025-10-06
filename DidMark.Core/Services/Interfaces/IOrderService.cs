@@ -26,6 +26,8 @@ namespace DidMark.Core.Services.Interfaces
         Task IncreaseOffCodeUsageAsync(long orderId, long userId);
 
         #endregion
+        Task UpdateOrderDetailCountAsync(long detailId, int newCount, long userId);
+
         #region Payment Status
 
         Task<bool> MarkOrderAsPaidAsync(long orderId, long refId);

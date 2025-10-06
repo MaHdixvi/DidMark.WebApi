@@ -17,6 +17,8 @@ namespace DidMark.Core.Services.Interfaces
         Task<RegisterUserResult> RegisterUserAsync(RegisterUserDTO register);
         Task<bool> ExistsByEmailAsync(string email);
         Task<LoginUserResult> LoginUserAsync(LoginUserDTO login, bool checkAdminRole = false);
+        Task<LoginUserResult> LoginAdminAsync(LoginAdminDTO login);
+
         Task<ChangePasswordResult> ChangePasswordAsync(ChangePasswordDTO changePassword, long userId);
         Task<User?> GetUserByPhoneNumberAsync(string phoneNumber);
         Task<User?> GetUserByEmailAsync(string email);

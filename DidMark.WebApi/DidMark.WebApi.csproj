@@ -44,8 +44,4 @@
     <ProjectReference Include="..\DidMark.DataLayer\DidMark.DataLayer.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
-
 </Project>

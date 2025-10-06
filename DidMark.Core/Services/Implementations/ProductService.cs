@@ -1,6 +1,7 @@
 ﻿using DidMark.Core.DTO.Paging;
 using DidMark.Core.DTO.Products;
 using DidMark.Core.DTO.Products.ProductCategory;
+using DidMark.Core.DTO.Products.ProductGalleries;
 using DidMark.Core.Services.Interfaces;
 using DidMark.Core.Utilities.Extensions.FileExtentions;
 using DidMark.Core.Utilities.Extensions.Paging;
@@ -69,6 +70,7 @@ namespace DidMark.Core.Services.Implementations
                 ImageName = imageName,
                 CreateDate = DateTime.Now,
                 IsDelete = false,
+                IsActive = productDto.IsActive,
                 // 🔹 تخفیف
                 DiscountPercent = productDto.DiscountPercent,
                 DiscountStartDate = productDto.DiscountStartDate,
@@ -113,6 +115,10 @@ namespace DidMark.Core.Services.Implementations
             if (productDto.IsSpecial.HasValue)
             {
                 product.IsSpecial = productDto.IsSpecial.Value;
+            }
+            if (productDto.IsActive.HasValue)
+            {
+                product.IsActive = productDto.IsActive.Value;
             }
             if (productDto.DiscountPercent.HasValue)
                 product.DiscountPercent = productDto.DiscountPercent.Value;
@@ -172,16 +178,26 @@ namespace DidMark.Core.Services.Implementations
 
         public async Task<ProductDto> GetProductById(long productId)
         {
-            // دریافت محصول همراه با اتریبیوت‌ها
+            // دریافت محصول بدون Includeهای مشکل‌ساز
             var product = await productRepository.GetEntitiesQuery()
                 .Include(p => p.ProductAttributes)
-                .ThenInclude(pa => pa.PAttribute)
+                    .ThenInclude(pa => pa.PAttribute)
                 .Include(p => p.ProductSelectedCategories)
                     .ThenInclude(pc => pc.ProductCategories)
-                .Include(p => p.ProductGalleries)
-                .SingleOrDefaultAsync(p => p.Id == productId && !p.IsDelete);
+                // حذف Include مربوط به ProductGalleries - این باعث circular reference می‌شود
+                // .Include(p => p.ProductGalleries)
+                .SingleOrDefaultAsync(p => p.Id == productId);
 
             if (product == null) return null;
+
+            // دریافت گالری‌ها به صورت جداگانه
+            var galleries = await productGalleriesRepository.GetEntitiesQuery()
+                .Where(g => g.ProductId == productId && !g.IsDelete)
+                .Select(g => new ProductGalleryDTO
+                {
+                    ImageName = g.ImageName
+                })
+                .ToListAsync();
 
             // تبدیل به ProductDto
             return new ProductDto
@@ -194,6 +210,7 @@ namespace DidMark.Core.Services.Implementations
                 NumberofProduct = product.NumberofProduct,
                 IsExists = product.IsExists,
                 IsSpecial = product.IsSpecial,
+                IsActive = product.IsActive,
                 ImageName = product.ImageName,
                 FinalPrice = product.FinalPrice,
                 DiscountPercent = product.DiscountPercent,
@@ -212,11 +229,9 @@ namespace DidMark.Core.Services.Implementations
                     ParentId = pc.ProductCategories?.ParentId,
                     UrlTitle = pc.ProductCategories?.UrlTitle
                 }).ToList(),
-                Galleries = product.ProductGalleries?.Where(g => !g.IsDelete)
-                            .Select(g => g.ImageName).ToList()
+                Galleries = galleries // استفاده از گالری‌های جداگانه
             };
         }
-
 
 
         public async Task<List<ProductDto>> GetRelatedProducts(long productId)
@@ -224,7 +239,7 @@ namespace DidMark.Core.Services.Implementations
             // دریافت محصول اصلی
             var product = await productRepository.GetEntitiesQuery()
                 .Include(p => p.ProductSelectedCategories)
-                .SingleOrDefaultAsync(p => p.Id == productId && !p.IsDelete);
+                .SingleOrDefaultAsync(p => p.Id == productId && !p.IsDelete && p.IsActive);
 
             if (product == null) return null;
 
@@ -255,6 +270,7 @@ namespace DidMark.Core.Services.Implementations
                 NumberofProduct = p.NumberofProduct,
                 IsExists = p.IsExists,
                 IsSpecial = p.IsSpecial,
+                IsActive = p.IsActive,
                 ImageName = p.ImageName,
                 FinalPrice = product.FinalPrice,
                 DiscountPercent = product.DiscountPercent,
@@ -273,8 +289,11 @@ namespace DidMark.Core.Services.Implementations
                     ParentId = pc.ProductCategories?.ParentId,
                     UrlTitle = pc.ProductCategories?.UrlTitle
                 }).ToList(),
-                Galleries = p.ProductGalleries?.Where(g => !g.IsDelete)
-                            .Select(g => g.ImageName).ToList()
+                Galleries = product.ProductGalleries?.Where(g => !g.IsDelete)
+                            .Select(g => new ProductGalleryDTO
+                            {
+                                ImageName = g.ImageName
+                            }).ToList()
             }).ToList();
         }
 
@@ -298,6 +317,7 @@ namespace DidMark.Core.Services.Implementations
                 Price = product.Price,
                 IsExists = product.IsExists,
                 IsSpecial = product.IsSpecial,
+                IsActive = product.IsActive,
                 DiscountPercent = product.DiscountPercent,
                 DiscountStartDate = product.DiscountStartDate,
                 DiscountEndDate = product.DiscountEndDate,
@@ -334,6 +354,7 @@ namespace DidMark.Core.Services.Implementations
                 IsExists = product.IsExists,
                 IsSpecial = product.IsSpecial,
                 ImageName = product.ImageName,
+                IsActive = product.IsActive,
                 FinalPrice = product.FinalPrice,
                 DiscountPercent = product.DiscountPercent,
                 DiscountStartDate = product.DiscountStartDate,
@@ -352,7 +373,10 @@ namespace DidMark.Core.Services.Implementations
                     UrlTitle = pc.ProductCategories?.UrlTitle
                 }).ToList(),
                 Galleries = product.ProductGalleries?.Where(g => !g.IsDelete)
-                            .Select(g => g.ImageName).ToList()
+                            .Select(g => new ProductGalleryDTO
+                            {
+                                ImageName = g.ImageName
+                            }).ToList()
             };
         }
 

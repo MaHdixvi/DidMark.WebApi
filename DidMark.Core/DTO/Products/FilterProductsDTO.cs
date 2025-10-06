@@ -1,5 +1,6 @@
 ﻿using DidMark.Core.DTO.Paging;
 using DidMark.Core.DTO.Products.ProductCategory;
+using DidMark.Core.DTO.Products.ProductGalleries;
 using DidMark.DataLayer.Entities.Product;
 using System;
 using System.Collections.Generic;
@@ -64,7 +65,11 @@ namespace DidMark.Core.DTO.Products
         UrlTitle = pc.ProductCategories.UrlTitle
     }).ToList(),
 
-                Galleries = p.ProductGalleries?.Where(g => !g.IsDelete).Select(g => g.ImageName).ToList(),
+                Galleries = p.ProductGalleries?.Where(g => !g.IsDelete)
+                            .Select(g => new ProductGalleryDTO
+                            {
+                                ImageName = g.ImageName
+                            }).ToList(),
                 DiscountEndDate = p.DiscountEndDate,
                 DiscountPercent = p.DiscountPercent,
                 DiscountStartDate = p.DiscountStartDate,
